@@ -28,4 +28,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mathapppw-api2:latest
+          tags: ghcr.io/mathapppw/mathapppw-api2:latest
