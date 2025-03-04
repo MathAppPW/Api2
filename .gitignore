@@ -1,5 +1,48 @@
 bin/
 obj/
+out/
+Debug/
+Release/
+TestResults/
 /packages/
+
+## rider
+.idea/
+*.sln.iml
 riderModule.iml
 /_ReSharper.Caches/
+
+*.vscode
+*.suo
+*.user
+*.code
+*.useroscache
+*.sln.docstates
+
+## User specific
+*.db
+*.rsuser
+*.suo
+*.psess
+*.pdb
+*.dotCover
+*.log
+*.vsconfig
+
+
+## Nuget
+*.nupkg
+packages/
+project.lock.json
+project.assets.json
+
+## Ignore publish output
+wwwtoor/
+node_modules/
+dist/
+.env
+.vscode/
+*.secrets.*.json
+*.log
+logs/
+*.tmp
