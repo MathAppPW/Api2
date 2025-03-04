@@ -1,6 +1,7 @@
 using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -118,6 +119,15 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [Authorize]
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        return Ok();
+    }
+    
     private async Task<TokenResponse?> GetTokenResponse(string refreshToken)
     {
         var accessToken = await _tokenService.GetAccessToken(refreshToken);
@@ -128,4 +138,5 @@ public class UserController : ControllerBase
             AccessToken = accessToken
         };
     }
+    
 }

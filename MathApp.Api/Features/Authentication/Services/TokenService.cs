@@ -86,6 +86,7 @@ public class TokenService : ITokenService
             Audience = _audience,
             Issuer = _issuer,
             IssuedAt = DateTime.UtcNow,
+            SigningCredentials = GetSigningCredentials()
         };
         var tokenHandler = new JsonWebTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
