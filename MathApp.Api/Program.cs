@@ -1,6 +1,8 @@
 using Dal.Extensions;
+using MathAppApi.Features.Authentication.DataStorages;
 using MathAppApi.Features.Authentication.Extensions;
 using MathAppApi.Shared.Cookies.Extensions;
+using MathAppApi.Shared.Emails;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using Models;
@@ -13,6 +15,8 @@ builder.Services.AddSqLiteDb();
 builder.Services.AddRepos();
 builder.Services.AddAuthenticationServices();
 builder.Services.AddCookieService();
+builder.Services.AddPasswordResetDataStorage();
+builder.Services.UseFakeEmailService();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.ConfigureCookies();
 builder.ConfigureJwt();
