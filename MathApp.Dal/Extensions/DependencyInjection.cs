@@ -20,4 +20,12 @@ public static class DependencyInjection
             o.UseSqlite(connectionString);
         });
     }
+
+    public static void AddInMemorySqLiteDb(this IServiceCollection services)
+    {
+        services.AddDbContext<MathAppDbContext>(o =>
+        {
+            o.UseSqlite("Data Source=:memory:");
+        });
+    }
 }

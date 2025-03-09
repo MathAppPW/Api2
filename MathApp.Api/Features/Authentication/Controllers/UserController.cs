@@ -1,6 +1,8 @@
 using MathApp.Dal.Interfaces;
+using MathAppApi.Features.Authentication.DataStorages;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
+using MathAppApi.Shared.Emails.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,17 +15,21 @@ namespace MathAppApi.Features.Authentication.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
-    private const string RefreshCookieName = "refresh_token";
-    
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly ITokenService _tokenService;
     private readonly IUserRepo _userRepo;
     private readonly IUserDataValidator _userDataValidator;
     private readonly ICookieService _cookieService;
+    private readonly IEmailService _emailService;
+    private readonly IPasswordResetDataStorage _passwordResetDataStorage;
     private readonly ILogger<UserController> _logger;
 
+    private readonly string _frontendUrl;
+    private readonly string _resetPasswordEndpoint;
+    
     public UserController(IPasswordHasher<User> passwordHasher, ITokenService tokenService, IUserRepo userRepo,
-        IUserDataValidator userDataValidator, ICookieService cookieService, ILogger<UserController> logger)
+        IUserDataValidator userDataValidator, ICookieService cookieService, ILogger<UserController> logger,
+        IEmailService emailService, IPasswordResetDataStorage passwordResetDataStorage, IConfiguration config)
     {
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
@@ -31,6 +37,11 @@ public class UserController : ControllerBase
         _userDataValidator = userDataValidator;
         _cookieService = cookieService;
         _logger = logger;
+        _emailService = emailService;
+        _passwordResetDataStorage = passwordResetDataStorage;
+
+        _frontendUrl = config["Frontend:FrontendUrl"] ?? "NO_FRONTEND_URL_SET";
+        _resetPasswordEndpoint = config["Frontend:ResetPasswordEndpoint"] ?? "NO_RESET_ENDPOINT_PROVIDED";
     }
     
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -39,6 +50,9 @@ public class UserController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
+        var waitTime = TimeSpan.FromSeconds(2);
+        await Task.Delay(waitTime);
+        
         var user = await _userRepo.FindOneAsync(u => u.Username == dto.Username);
         if (user == null)
             return Unauthorized(new MessageResponse("Invalid credentials"));
@@ -119,6 +133,52 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    //If given mail address is NOT in db it still returns ok 
+    //but does not send the message
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [HttpPost("forgotPassword")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        var waitTime = TimeSpan.FromSeconds(2);
+        await Task.Delay(waitTime);
+        
+        var email = dto.Email;
+        var user = await _userRepo.FindOneAsync(u => u.Email == email);
+        if (user == null)
+            return Ok();
+        var resetId = _passwordResetDataStorage.RegisterPasswordReset(user.Id);
+        //TODO: fix this to correctly display address
+        var emailContent = $"Hi {user.Username}, someone have requested a password reset from your email!\n" +
+                           $"If it wasn't you contact us immediately.\n" +
+                           $"To reset your email click the link below: ${_frontendUrl}/{resetId}";
+        await _emailService.SendEmail(email, emailContent);
+        return Ok();
+    }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HttpPost("resetPassword")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        var userId = _passwordResetDataStorage.GetUserId(dto.ResetId);
+        if (userId == null)
+            return Unauthorized();
+        var (isValid, message) = _userDataValidator.IsPasswordValid(dto.Password);
+        if (!isValid)
+            return BadRequest(message);
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+        {
+            _logger.LogError($"User with id {userId} not find in password reset!");
+            return StatusCode(500);
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+        await _userRepo.UpdateAsync(user);
+        return Ok();
+    }
+    
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [Authorize]
@@ -138,5 +198,4 @@ public class UserController : ControllerBase
             AccessToken = accessToken
         };
     }
-    
 }

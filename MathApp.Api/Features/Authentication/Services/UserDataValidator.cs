@@ -21,7 +21,7 @@ public class UserDataValidator : IUserDataValidator
         return (true, "");
     }
 
-    private (bool, string) IsPasswordValid(string password)
+    public (bool, string) IsPasswordValid(string password)
     {
         var hasLowerLetter = password.Any(char.IsLower);
         var hasUpperLetter = password.Any(char.IsUpper);
