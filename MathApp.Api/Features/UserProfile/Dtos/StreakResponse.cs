@@ -2,8 +2,8 @@
 
 namespace MathAppApi.Features.UserProfile.Dtos;
 
-public class ExperienceDto
+public class StreakResponse
 {
     [Required]
-    public int Amount { get; set; } = 0;
+    public int Streak { get; set; } = 0;
 }

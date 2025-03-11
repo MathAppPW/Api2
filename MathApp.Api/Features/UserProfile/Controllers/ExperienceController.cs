@@ -1,95 +1,89 @@
-﻿using MathApp.Dal.Interfaces;
+﻿using Dal;
+using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using System.Security.Claims;
 
 namespace MathAppApi.Features.UserProfile.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class ExperienceController : ControllerBase
 {
-    private readonly IUserRepo _userRepo;
-    private readonly ICookieService _cookieService;
-    private readonly ITokenService _tokenService;
+    private readonly IUserProfileRepo _userProfileRepo;
 
     private readonly ILogger<ExperienceController> _logger;
 
-    public ExperienceController(IUserRepo userRepo, ICookieService cookieService, ITokenService tokenService, ILogger<ExperienceController> logger)
+    public ExperienceController(IUserProfileRepo userProfileRepo, ILogger<ExperienceController> logger)
     {
-        _userRepo = userRepo;
-        _cookieService = cookieService;
-        _tokenService = tokenService;
+        _userProfileRepo = userProfileRepo;
         _logger = logger;
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ExperienceResponse>(StatusCodes.Status200OK)]
     [HttpPost("add")]
     public async Task<IActionResult> Add([FromBody] ExperienceDto dto)
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Experience increase attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during experience increase attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        user.Experience += dto.Amount;
+        userProfile.Experience += dto.Amount;
         var leveledUp = false;
-        if(user.Experience / 1000 > user.Level)
+        if(userProfile.Experience / 1000 > userProfile.Level)
         {
-            user.Level = user.Experience / 1000;
+            userProfile.Level = userProfile.Experience / 1000;
             leveledUp = true;
         }
 
-        return Ok(new { leveledUp, user.Level, user.Experience });
+        await _userProfileRepo.UpdateAsync(userProfile);
+
+        return Ok(new ExperienceResponse {
+            LeveledUp = leveledUp,
+            Level = userProfile.Level,
+            Experience = userProfile.Experience });
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ExperienceResponse>(StatusCodes.Status200OK)]
     [HttpGet]
-    public async Task<IActionResult> Get([FromBody] BasicDto dto)
+    public async Task<IActionResult> Get()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Experience fetch attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during experience fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        return Ok(new { user.Level, user.Experience });
-    }
-
-    public async Task<IActionResult> ValidateRefreshToken()
-    {
-        var refreshToken = _cookieService.GetCookie(Request, "RefreshToken");
-        if (refreshToken == null)
+        return Ok(new ExperienceResponse
         {
-            _logger.LogInformation("Update attempt without refresh token.");
-            return Unauthorized();
-        }
-        var isTokenValid = await _tokenService.IsRefreshTokenValid(refreshToken);
-        if (!isTokenValid)
-        {
-            _logger.LogInformation("Update attempt with invalid refresh token.");
-            return Unauthorized();
-        }
-        return Ok();
+            LeveledUp = false,
+            Level = userProfile.Level,
+            Experience = userProfile.Experience
+        });
     }
-
 }

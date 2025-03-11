@@ -2,165 +2,142 @@
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using System.Security.Claims;
 
 namespace MathAppApi.Features.UserProfile.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class LivesController : ControllerBase
 {
-    private readonly int _livesUpdateInterval = 5;
-    private readonly int _maxLives = 10;
-    private readonly IUserRepo _userRepo;
-    private readonly ICookieService _cookieService;
-    private readonly ITokenService _tokenService;
+    private static readonly int _livesUpdateInterval = 5;
+    private static readonly int _maxLives = 10;
+    private readonly IUserProfileRepo _userProfileRepo;
 
     private readonly ILogger<LivesController> _logger;
 
-    public LivesController(IUserRepo userRepo, ICookieService cookieService, ITokenService tokenService, ILogger<LivesController> logger)
+    public LivesController(IUserProfileRepo userProfileRepo, ILogger<LivesController> logger)
     {
-        _userRepo = userRepo;
-        _cookieService = cookieService;
-        _tokenService = tokenService;
+        _userProfileRepo = userProfileRepo;
         _logger = logger;
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
-    [HttpPost("update")]
-    public async Task<IActionResult> UpdateLives([FromBody] BasicDto dto)
+    [ProducesResponseType<LivesResponse>(StatusCodes.Status200OK)]
+    [HttpGet]
+    public async Task<IActionResult> UpdateLives()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Lives update attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during lives update attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
         var currentTime = DateTime.UtcNow;
-        var lastUpdate = user.LastLivesUpdate;
+        var lastUpdate = userProfile.LastLivesUpdate;
         var timeDifference = currentTime - lastUpdate;
         var livesToAdd = (int)timeDifference.TotalMinutes / _livesUpdateInterval;
 
-        user.Lives = Math.Min(user.Lives + livesToAdd, _maxLives);
-        if(user.Lives == _maxLives)
+        userProfile.Lives = Math.Min(userProfile.Lives + livesToAdd, _maxLives);
+        if(userProfile.Lives == _maxLives)
         {
-            user.LastLivesUpdate = currentTime;
+            userProfile.LastLivesUpdate = currentTime;
         }
         else
         {
-            user.LastLivesUpdate = lastUpdate.AddMinutes(livesToAdd * _livesUpdateInterval);
+            userProfile.LastLivesUpdate = lastUpdate.AddMinutes(livesToAdd * _livesUpdateInterval);
         }
 
-        return Ok(user.Lives);
+        await _userProfileRepo.UpdateAsync(userProfile);
+
+        return Ok(new LivesResponse
+        {
+            Lives = userProfile.Lives,
+            SecondsToHeal = GetSecondsToHeal(userProfile)
+        });
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<LivesResponse>(StatusCodes.Status200OK)]
     [HttpPost("damage")]
-    public async Task<IActionResult> Damage([FromBody] BasicDto dto)
+    public async Task<IActionResult> Damage()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Lives damage attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during lives damage attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        await UpdateLives(dto);
-        user.Lives = Math.Max(user.Lives - 1, 0);
+        await UpdateLives();
+        userProfile.Lives = Math.Max(userProfile.Lives - 1, 0);
 
-        return Ok(user.Lives);
+        await _userProfileRepo.UpdateAsync(userProfile);
+
+        return Ok(userProfile.Lives);
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<LivesResponse>(StatusCodes.Status200OK)]
     [HttpPost("heal")]
-    public async Task<IActionResult> Heal([FromBody] BasicDto dto)
+    public async Task<IActionResult> Heal()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Lives heal attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during lives heal attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        await UpdateLives(dto);
-        user.Lives = Math.Min(user.Lives + 1, _maxLives);
-        if (user.Lives == _maxLives)
+        await UpdateLives();
+        userProfile.Lives = Math.Min(userProfile.Lives + 1, _maxLives);
+        if (userProfile.Lives == _maxLives)
         {
-            user.LastLivesUpdate = DateTime.UtcNow;
+            userProfile.LastLivesUpdate = DateTime.UtcNow;
         }
 
-        return Ok(user.Lives);
+        await _userProfileRepo.UpdateAsync(userProfile);
+
+        return Ok(userProfile.Lives);
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
-    [HttpGet("time-to-heal")]
-    public async Task<IActionResult> TimeToHeal([FromBody] BasicDto dto)
+    public static int GetSecondsToHeal(Models.UserProfile userProfile)
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        if (userProfile.Lives == _maxLives)
         {
-            return validationResponse;
-        }
-
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
-        {
-            return BadRequest(new MessageResponse("User not found"));
-        }
-
-        await UpdateLives(dto);
-        if(user.Lives == _maxLives)
-        {
-            return Ok(0);
+            return 0;
         }
         else
         {
-            int timeFromLastUpdate = (int)(DateTime.UtcNow - user.LastLivesUpdate).TotalSeconds;
+            int timeFromLastUpdate = (int)(DateTime.UtcNow - userProfile.LastLivesUpdate).TotalSeconds;
             int secondsToHeal = _livesUpdateInterval * 60 - timeFromLastUpdate;
-            return Ok(new { secondsToHeal });
+            return secondsToHeal;
         }
     }
-
-    public async Task<IActionResult> ValidateRefreshToken()
-    {
-        var refreshToken = _cookieService.GetCookie(Request, "RefreshToken");
-        if (refreshToken == null)
-        {
-            _logger.LogInformation("Update attempt without refresh token.");
-            return Unauthorized();
-        }
-        var isTokenValid = await _tokenService.IsRefreshTokenValid(refreshToken);
-        if (!isTokenValid)
-        {
-            _logger.LogInformation("Update attempt with invalid refresh token.");
-            return Unauthorized();
-        }
-        return Ok();
-    }
-
 }

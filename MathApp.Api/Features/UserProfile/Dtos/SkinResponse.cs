@@ -2,9 +2,8 @@
 
 namespace MathAppApi.Features.UserProfile.Dtos;
 
-public class BasicDto
+public class SkinResponse
 {
     [Required]
-    [StringLength(128)]
-    public string UserId { get; set; } = "";
+    public int SkinId { get; set; } = 0;
 }

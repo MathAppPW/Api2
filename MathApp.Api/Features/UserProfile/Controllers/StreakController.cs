@@ -2,111 +2,99 @@
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using System.Security.Claims;
 
 namespace MathAppApi.Features.UserProfile.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class StreakController : ControllerBase
 {
-    private readonly IUserRepo _userRepo;
-    private readonly ICookieService _cookieService;
-    private readonly ITokenService _tokenService;
+    private readonly IUserProfileRepo _userProfileRepo;
 
     private readonly ILogger<StreakController> _logger;
 
-    public StreakController(IUserRepo userRepo, ICookieService cookieService, ITokenService tokenService, ILogger<StreakController> logger)
+    public StreakController(IUserProfileRepo userProfileRepo, ILogger<StreakController> logger)
     {
-        _userRepo = userRepo;
-        _cookieService = cookieService;
-        _tokenService = tokenService;
+        _userProfileRepo = userProfileRepo;
         _logger = logger;
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<StreakResponse>(StatusCodes.Status200OK)]
     [HttpPost("increase")]
-    public async Task<IActionResult> Increase([FromBody] BasicDto dto)
+    public async Task<IActionResult> Increase()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Streak increase attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during streak increase attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        user.Streak++;
+        userProfile.Streak++;
 
-        return Ok(new { user.Streak });
+        await _userProfileRepo.UpdateAsync(userProfile);
+
+        return Ok(new StreakResponse { Streak = userProfile.Streak });
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [HttpPost("reset")]
-    public async Task<IActionResult> Reset([FromBody] BasicDto dto)
+    public async Task<IActionResult> Reset()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Streak reset attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during streak reset attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        user.Streak = 0;
+        userProfile.Streak = 0;
+
+        await _userProfileRepo.UpdateAsync(userProfile);
 
         return Ok();
     }
 
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<StreakResponse>(StatusCodes.Status200OK)]
     [HttpGet]
-    public async Task<IActionResult> Get([FromBody] BasicDto dto)
+    public async Task<IActionResult> Get()
     {
-        var validationResponse = await ValidateRefreshToken();
-        if (validationResponse is not OkResult)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            return validationResponse;
+            _logger.LogInformation("Streak fetch attempt with no userId.");
+            return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Id == dto.UserId);
-        if (user == null)
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
         {
+            _logger.LogInformation("User not found during streak fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        return Ok(new { user.Streak });
+        return Ok(new StreakResponse { Streak = userProfile.Streak });
     }
-
-    public async Task<IActionResult> ValidateRefreshToken()
-    {
-        var refreshToken = _cookieService.GetCookie(Request, "RefreshToken");
-        if (refreshToken == null)
-        {
-            _logger.LogInformation("Update attempt without refresh token.");
-            return Unauthorized();
-        }
-        var isTokenValid = await _tokenService.IsRefreshTokenValid(refreshToken);
-        if (!isTokenValid)
-        {
-            _logger.LogInformation("Update attempt with invalid refresh token.");
-            return Unauthorized();
-        }
-        return Ok();
-    }
-
 }
