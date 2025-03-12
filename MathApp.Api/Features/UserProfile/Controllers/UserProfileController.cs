@@ -3,6 +3,7 @@ using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
+using MathAppApi.Features.UserProfile.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -44,17 +45,6 @@ public class UserProfileController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        return Ok(new UserProfileResponse
-        {
-            Id = userProfile.Id,
-            Level = userProfile.Level,
-            Experience = userProfile.Experience,
-            Streak = userProfile.Streak,
-            Lives = userProfile.Lives,
-            LastLivesUpdate = userProfile.LastLivesUpdate,
-            SecondsToHeal = LivesController.GetSecondsToHeal(userProfile),
-            RocketSkin = userProfile.RocketSkin,
-            ProfileSkin = userProfile.ProfileSkin
-        });
+        return Ok(userProfile.ToDto());
     }
 }
