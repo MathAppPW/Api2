@@ -1,10 +1,14 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Models;
 
 public class UserProfile
 {
-    [Required] public string Id { get; set; } = "";
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    [Required]
+    public string Id { get; set; } = "";
     [Required] public int Level { get; set; } = 1;
     [Required] public int Experience { get; set; } = 0;
     [Required] public int Streak { get; set; } = 0;

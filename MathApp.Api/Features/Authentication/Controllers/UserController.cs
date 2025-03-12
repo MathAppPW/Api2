@@ -18,6 +18,7 @@ public class UserController : ControllerBase
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly ITokenService _tokenService;
     private readonly IUserRepo _userRepo;
+    private readonly IUserProfileRepo _userProfileRepo;
     private readonly IUserDataValidator _userDataValidator;
     private readonly ICookieService _cookieService;
     private readonly IEmailService _emailService;
@@ -27,13 +28,14 @@ public class UserController : ControllerBase
     private readonly string _frontendUrl;
     private readonly string _resetPasswordEndpoint;
     
-    public UserController(IPasswordHasher<User> passwordHasher, ITokenService tokenService, IUserRepo userRepo,
+    public UserController(IPasswordHasher<User> passwordHasher, ITokenService tokenService, IUserRepo userRepo, IUserProfileRepo userProfileRepo,
         IUserDataValidator userDataValidator, ICookieService cookieService, ILogger<UserController> logger,
         IEmailService emailService, IPasswordResetDataStorage passwordResetDataStorage, IConfiguration config)
     {
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _userRepo = userRepo;
+        _userProfileRepo = userProfileRepo;
         _userDataValidator = userDataValidator;
         _cookieService = cookieService;
         _logger = logger;
@@ -92,6 +94,19 @@ public class UserController : ControllerBase
             PasswordHash = _passwordHasher.HashPassword(null!, dto.Password),
         };
         await _userRepo.AddAsync(user);
+        var userProfile = new Models.UserProfile()
+        {
+            Id = user.Id,
+            Level = 1,
+            Experience = 0,
+            Streak = 0,
+            Lives = 10,
+            LastLivesUpdate = DateTime.UtcNow,
+            RocketSkin = 0,
+            ProfileSkin = 0
+        };
+        await _userProfileRepo.AddAsync(userProfile);
+
         var refreshToken = await _tokenService.GetRefreshToken(user);
         var response = await GetTokenResponse(refreshToken);
         if (response == null)

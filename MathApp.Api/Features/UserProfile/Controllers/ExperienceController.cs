@@ -36,7 +36,7 @@ public class ExperienceController : ControllerBase
             _logger.LogInformation("Experience increase attempt with no userId.");
             return Unauthorized();
         }
-
+        Console.WriteLine(userId);
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
@@ -46,9 +46,9 @@ public class ExperienceController : ControllerBase
 
         userProfile.Experience += dto.Amount;
         var leveledUp = false;
-        if(userProfile.Experience / 1000 > userProfile.Level)
+        if(userProfile.Experience / 1000 + 1 > userProfile.Level)
         {
-            userProfile.Level = userProfile.Experience / 1000;
+            userProfile.Level = userProfile.Experience / 1000 + 1;
             leveledUp = true;
         }
 

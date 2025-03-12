@@ -11,7 +11,10 @@ public class UserProfileRepo : BaseRepo<UserProfile>, IUserProfileRepo
 
     public override Task AddAsync(UserProfile entity)
     {
-        entity.Id = Guid.NewGuid().ToString();
+        if(entity.Id == "")
+        {
+            entity.Id = Guid.NewGuid().ToString();
+        }
         return base.AddAsync(entity);
     }
 }

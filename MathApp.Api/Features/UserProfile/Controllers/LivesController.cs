@@ -93,7 +93,11 @@ public class LivesController : ControllerBase
 
         await _userProfileRepo.UpdateAsync(userProfile);
 
-        return Ok(userProfile.Lives);
+        return Ok(new LivesResponse
+        {
+            Lives = userProfile.Lives,
+            SecondsToHeal = GetSecondsToHeal(userProfile)
+        });
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -124,7 +128,11 @@ public class LivesController : ControllerBase
 
         await _userProfileRepo.UpdateAsync(userProfile);
 
-        return Ok(userProfile.Lives);
+        return Ok(new LivesResponse
+        {
+            Lives = userProfile.Lives,
+            SecondsToHeal = GetSecondsToHeal(userProfile)
+        });
     }
 
     public static int GetSecondsToHeal(Models.UserProfile userProfile)
