@@ -46,3 +46,4 @@ dist/
 *.log
 logs/
 *.tmp
+.vs/
