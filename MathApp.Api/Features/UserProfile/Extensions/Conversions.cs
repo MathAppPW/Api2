@@ -4,7 +4,7 @@ using Models;
 
 namespace MathAppApi.Features.UserProfile.Extensions;
 
-public static class Contersions
+public static class Conversions
 {
     public static UserProfileResponse ToDto(this Models.UserProfile userProfile)
     {
