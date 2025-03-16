@@ -1,4 +1,5 @@
-﻿using MathAppApi.Features.UserProfile.Controllers;
+﻿using MathAppApi.Features.UserExerciseHistory.Dtos;
+using MathAppApi.Features.UserProfile.Controllers;
 using MathAppApi.Features.UserProfile.Dtos;
 using Models;
 

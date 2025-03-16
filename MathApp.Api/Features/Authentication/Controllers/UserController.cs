@@ -103,7 +103,8 @@ public class UserController : ControllerBase
             Lives = 10,
             LastLivesUpdate = DateTime.UtcNow,
             RocketSkin = 0,
-            ProfileSkin = 0
+            ProfileSkin = 0,
+            History = []
         };
         await _userProfileRepo.AddAsync(userProfile);
 

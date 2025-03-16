@@ -1,6 +1,6 @@
 ﻿using MathApp.Dal.Interfaces;
-using MathAppApi.Features.UserProfile.Controllers;
-using MathAppApi.Features.UserProfile.Dtos;
+using MathAppApi.Features.UserExerciseHistory.Controllers;
+using MathAppApi.Features.UserExerciseHistory.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
