@@ -17,21 +17,16 @@ public class HistoryUtils
 
     public async Task<StreakResponse> GetLongestStreak(Models.UserProfile userProfile)
     {
-        List<UserHistoryEntry> history = await GetList(userProfile);
-        if (history == null || history.Count == 0)
-        {
-            return new StreakResponse { };
-        }
-
-        List<DateTime> successDays = history
-            .Where(e => e.Success)
-            .Select(e => e.Date.Date)
-            .Distinct()
-            .OrderBy(date => date)
-            .ToList();
-
+        List<DateTime> successDays = await GetSuccessDays(userProfile);
         if (successDays.Count == 0)
-            return new StreakResponse { };
+        {
+            return new StreakResponse
+            {
+                Streak = 0,
+                Start = DateTime.Today,
+                End = DateTime.Today
+            };
+        }
 
         int longestStreak = 1;
         int currentStreak = 1;
@@ -44,7 +39,10 @@ public class HistoryUtils
             if ((successDays[i] - successDays[i - 1]).Days == 1)
             {
                 currentStreak++;
-                longestStreak = Math.Max(longestStreak, currentStreak);
+                if(currentStreak == 2)
+                {
+                    currentStart = successDays[i - 1];
+                }
             }
             else
             {
@@ -55,8 +53,14 @@ public class HistoryUtils
                     longestEnd = successDays[i - 1];
                 }
                 currentStreak = 1;
-                currentStart = successDays[i];
             }
+        }
+
+        if (currentStreak > longestStreak)
+        {
+            longestStreak = currentStreak;
+            longestStart = currentStart;
+            longestEnd = successDays[successDays.Count - 1];
         }
 
         return new StreakResponse
@@ -69,21 +73,16 @@ public class HistoryUtils
 
     public async Task<StreakResponse> GetCurrentStreak(Models.UserProfile userProfile)
     {
-        List<UserHistoryEntry> history = await GetList(userProfile);
-        if (history == null || history.Count == 0)
-        {
-            return new StreakResponse { };
-        }
-
-        List<DateTime> successDays = history
-            .Where(e => e.Success)
-            .Select(e => e.Date.Date)
-            .Distinct()
-            .OrderBy(date => date)
-            .ToList();
-
+        List<DateTime> successDays = await GetSuccessDays(userProfile);
         if (successDays.Count == 0)
-            return new StreakResponse { };
+        {
+            return new StreakResponse
+            {
+                Streak = 0,
+                Start = DateTime.Today,
+                End = DateTime.Today
+            };
+        }
 
         DateTime today = DateTime.Today;
         DateTime yesterday = today.AddDays(-1);
@@ -93,12 +92,9 @@ public class HistoryUtils
 
         for (int i = successDays.Count - 1; i >= 0; i--)
         {
-            if (successDays[i] == today || successDays[i] == yesterday)
-            {
-                currentStreak = 1;
-                currentStart = successDays[i];
-            }
-            else if (currentStreak > 0 && successDays[i] == successDays[i + 1].AddDays(-1))
+            bool isRecentDay = successDays[i] == today || successDays[i] == yesterday;
+            bool doesContinueStreak = !isRecentDay && (successDays[i + 1] - successDays[i]).Days == 1;
+            if (isRecentDay || (currentStreak > 0 && doesContinueStreak))
             {
                 currentStreak++;
                 currentStart = successDays[i];
@@ -117,46 +113,50 @@ public class HistoryUtils
         };
     }
 
-    public async Task<List<TimeSpentDto>> GetTimeSpentPerDay(Models.UserProfile userProfile)
+    private async Task<List<DateTime>> GetSuccessDays(Models.UserProfile userProfile)
+    {
+        List<UserHistoryEntry> history = await GetList(userProfile);
+        if (history == null || history.Count == 0)
+        {
+            Console.WriteLine("CHUJ");
+            return [];
+        }
+
+        List<DateTime> successDays = history
+            .Where(e => e.Success)
+            .Select(e => e.Date.Date)
+            .Distinct()
+            .OrderBy(date => date)
+            .ToList();
+
+        if (successDays.Count == 0)
+        {
+            return [];
+        }
+
+        return successDays;
+    }
+
+    public async Task<List<HistoryGetDaysResponseDay>> GetActivityPerDay(Models.UserProfile userProfile)
     {
         List<UserHistoryEntry> history = await GetList(userProfile);
         if (history == null || history.Count == 0)
         {
             return [];
         }
-
 
         return history
             .GroupBy(e => e.Date.Date)
-            .Select(g => new TimeSpentDto
+            .Select(g => new HistoryGetDaysResponseDay
             {
                 Date = g.Key,
-                SecondsSpent = g.Sum(e => e.TimeSpent)
+                SecondsSpent = g.Sum(e => e.TimeSpent),
+                ExercisesCount = g.Count(),
+                ExercisesCountSuccessful = g.Count(e => e.Success),
+                ExercisesCountFailed = g.Count(e => !e.Success),
             })
             .OrderBy(d => d.Date)
             .ToList();
-    }
-
-        
-    public async Task<List<ExerciseCounterDto>> GetExercisesCountPerDay(Models.UserProfile userProfile)
-    {
-        List<UserHistoryEntry> history = await GetList(userProfile);
-        if (history == null || history.Count == 0)
-        {
-            return [];
-        }
-
-        return history
-        .GroupBy(e => e.Date.Date)
-        .Select(g => new ExerciseCounterDto
-        {
-            Date = g.Key,
-            Successful = g.Count(e => e.Success),
-            Failed = g.Count(e => !e.Success),
-            Total = g.Count()
-        })
-        .OrderBy(dto => dto.Date)
-        .ToList();
     }
 
     public async Task<int> GetExercisesCountAll(Models.UserProfile userProfile)

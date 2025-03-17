@@ -2,10 +2,8 @@
 
 namespace MathAppApi.Features.UserExerciseHistory.Dtos;
 
-public class TimeSpentDto
+public class HistoryGetAllResponse
 {
     [Required]
-    public DateTime Date { get; set; }
-    [Required]
-    public int SecondsSpent { get; set; }
+    public List<Models.UserHistoryEntry> Entries { get; set; } = [];
 }

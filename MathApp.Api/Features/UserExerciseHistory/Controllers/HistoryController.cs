@@ -17,7 +17,7 @@ namespace MathAppApi.Features.UserExerciseHistory.Controllers;
 public class HistoryController : ControllerBase
 {
     private readonly IUserProfileRepo _userProfileRepo;
-    private readonly IUserHistoryEntryRepo _UserHistoryEntryRepo;
+    private readonly IUserHistoryEntryRepo _userHistoryEntryRepo;
 
     private readonly ILogger<HistoryController> _logger;
 
@@ -26,14 +26,14 @@ public class HistoryController : ControllerBase
     public HistoryController(IUserProfileRepo userProfileRepo, IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<HistoryController> logger)
     {
         _userProfileRepo = userProfileRepo;
-        _UserHistoryEntryRepo = userHistoryEntryRepo;
+        _userHistoryEntryRepo = userHistoryEntryRepo;
         _logger = logger;
         utils = new HistoryUtils(userHistoryEntryRepo);
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [HttpPost]
+    [HttpPost("add")]
     public async Task<IActionResult> Add([FromBody] HistoryEntryDto dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -53,7 +53,7 @@ public class HistoryController : ControllerBase
         UserHistoryEntry historyEntry = dto.ToModel();
         userProfile.History.Add(historyEntry.Id);
 
-        await _UserHistoryEntryRepo.AddAsync(historyEntry);
+        await _userHistoryEntryRepo.AddAsync(historyEntry);
         await _userProfileRepo.UpdateAsync(userProfile);
 
         return Ok();
@@ -61,10 +61,10 @@ public class HistoryController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<UserHistoryEntry>(StatusCodes.Status200OK)]
-    [HttpGet]
-    public async Task<IActionResult> Get([FromBody] string entryId)
+    [HttpPost("fetch")]
+    public async Task<IActionResult> Get([FromBody] HistoryGetDto dto)
     {
-        var entry = await _UserHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
+        var entry = await _userHistoryEntryRepo.FindOneAsync(u => u.Id == dto.Id);
         if (entry == null)
         {
             _logger.LogInformation("User history entry not found during fetch attempt.");
@@ -75,8 +75,8 @@ public class HistoryController : ControllerBase
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<List<string>>(StatusCodes.Status200OK)]
-    [HttpGet("all")]
+    [ProducesResponseType<HistoryGetAllResponse>(StatusCodes.Status200OK)]
+    [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -93,25 +93,25 @@ public class HistoryController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        List<string> history = [];
+        List<UserHistoryEntry> history = [];
         foreach (string entryId in userProfile.History)
         {
-            var entry = await _UserHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
+            var entry = await _userHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
             if (entry == null)
             {
                 _logger.LogInformation("User history entry not found during fetch attempt.");
                 return BadRequest(new MessageResponse("Invalid user history entry found"));
             }
-            history.Add(entryId);
+            history.Add(entry);
         }
 
-        return Ok(history);
+        return Ok(new HistoryGetAllResponse { Entries = history });
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<List<TimeSpentDto>>(StatusCodes.Status200OK)]
-    [HttpGet("time-spent")]
-    public async Task<IActionResult> GetTimeSpent()
+    [ProducesResponseType<HistoryGetDaysResponse>(StatusCodes.Status200OK)]
+    [HttpGet("days")]
+    public async Task<IActionResult> GetActivityPerDay()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -127,39 +127,15 @@ public class HistoryController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        List<TimeSpentDto> response = await utils.GetTimeSpentPerDay(userProfile);
+        List<HistoryGetDaysResponseDay> days = await utils.GetActivityPerDay(userProfile);
 
-        return Ok(response);
-    }
-
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<List<ExerciseCounterDto>>(StatusCodes.Status200OK)]
-    [HttpGet("exercises-per-day")]
-    public async Task<IActionResult> GetExerciseCountPerDay()
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null)
-        {
-            _logger.LogInformation("Exercises count per day fetch attempt with no userId.");
-            return Unauthorized();
-        }
-
-        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
-        if (userProfile == null)
-        {
-            _logger.LogInformation("User not found during exercises count per day fetch attempt.");
-            return BadRequest(new MessageResponse("User not found"));
-        }
-
-        List<ExerciseCounterDto> response = await utils.GetExercisesCountPerDay(userProfile);
-
-        return Ok(response);
+        return Ok(new HistoryGetDaysResponse { Days = days });
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<int>(StatusCodes.Status200OK)]
-    [HttpGet("exercises-count-all")]
-    public async Task<IActionResult> GetExerciseCountAll()
+    [HttpGet("success")]
+    public async Task<IActionResult> GetExerciseCountSuccessful()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -199,7 +175,7 @@ public class HistoryController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        var entry = await _UserHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
+        var entry = await _userHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
         if (entry == null)
         {
             _logger.LogInformation("User history entry not found during delete attempt.");
@@ -208,7 +184,7 @@ public class HistoryController : ControllerBase
 
         userProfile.History.Remove(entryId);
 
-        await _UserHistoryEntryRepo.RemoveAsync(entry);
+        await _userHistoryEntryRepo.RemoveAsync(entry);
         await _userProfileRepo.UpdateAsync(userProfile);
 
         return Ok();

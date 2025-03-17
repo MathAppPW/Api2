@@ -40,7 +40,7 @@ public class ExperienceControllerTests
     [Test]
     public async Task Add_ShouldReturnOk_WhenExperienceAdded()
     {
-        var userProfile = new Models.UserProfile { Id = "123", Experience = 900, Level = 0 };
+        var userProfile = new Models.UserProfile { Id = "123", Experience = 900, Level = 1 };
         _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Models.UserProfile, bool>>>())).ReturnsAsync(userProfile);
         _userRepoMock.Setup(repo => repo.UpdateAsync(It.IsAny<Models.UserProfile>())).Returns(Task.CompletedTask);
 
@@ -55,7 +55,7 @@ public class ExperienceControllerTests
             if(response != null)
             {
                 Assert.That(response.Experience, Is.EqualTo(1100));
-                Assert.That(response.Level, Is.EqualTo(1));
+                Assert.That(response.Level, Is.EqualTo(2));
                 Assert.That(response.LeveledUp, Is.True);
             }
         });
@@ -108,7 +108,7 @@ public class ExperienceControllerTests
     [Test]
     public async Task Get_ShouldReturnExperience_WhenUserExists()
     {
-        var userProfile = new Models.UserProfile { Id = "123", Experience = 1500, Level = 1 };
+        var userProfile = new Models.UserProfile { Id = "123", Experience = 1500, Level = 2 };
         _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Models.UserProfile, bool>>>())).ReturnsAsync(userProfile);
 
         var result = await _controller.Get();
@@ -122,7 +122,7 @@ public class ExperienceControllerTests
             if(response != null)
             {
                 Assert.That(response.Experience, Is.EqualTo(1500));
-                Assert.That(response.Level, Is.EqualTo(1));
+                Assert.That(response.Level, Is.EqualTo(2));
                 Assert.That(response.LeveledUp, Is.False);
             }
         });
