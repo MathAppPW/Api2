@@ -7,5 +7,5 @@ public class Chapter
     [Key]
     public string Name { get; set; } = "";
 
-    public ICollection<Lesson> Lessons { get; set; } = [];
+    public ICollection<Subject> Subjects { get; set; } = [];
 }

@@ -7,5 +7,5 @@ public class Exercise
     public int Id { get; set; }
     public string Contents { get; set; } = "";
 
-    public ICollection<Series> Series { get; set; } = [];
+    public ICollection<ExerciseSeries> ExerciseSeries { get; set; } = [];
 }
