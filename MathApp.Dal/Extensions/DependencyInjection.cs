@@ -12,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IUserRepo, UserRepo>();
         services.AddScoped<IUserProfileRepo, UserProfileRepo>();
+        services.AddScoped<IUserHistoryEntryRepo, UserHistoryEntryRepo>();
     }
 
     public static void AddSqLiteDb(this IServiceCollection services, string connectionString = SqLiteConnectionString)

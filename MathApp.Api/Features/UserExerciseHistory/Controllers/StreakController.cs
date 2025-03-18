@@ -1,13 +1,15 @@
 ﻿using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
-using MathAppApi.Features.UserProfile.Dtos;
+using MathAppApi.Features.UserExerciseHistory.Dtos;
+using MathAppApi.Shared.Utils;
+using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using System.Security.Claims;
 
-namespace MathAppApi.Features.UserProfile.Controllers;
+namespace MathAppApi.Features.UserExerciseHistory.Controllers;
 
 [Authorize]
 [ApiController]
@@ -18,16 +20,19 @@ public class StreakController : ControllerBase
 
     private readonly ILogger<StreakController> _logger;
 
-    public StreakController(IUserProfileRepo userProfileRepo, ILogger<StreakController> logger)
+    private readonly IHistoryUtils _utils;
+
+    public StreakController(IUserProfileRepo userProfileRepo, ILogger<StreakController> logger, IHistoryUtils utils)
     {
         _userProfileRepo = userProfileRepo;
         _logger = logger;
+        _utils = utils;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<StreakResponse>(StatusCodes.Status200OK)]
-    [HttpPost("increase")]
-    public async Task<IActionResult> Increase()
+    [HttpGet("longest")]
+    public async Task<IActionResult> GetLongest()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -39,62 +44,36 @@ public class StreakController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during streak increase attempt.");
+            _logger.LogWarning("User not found during streak increase attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        userProfile.Streak++;
+        StreakResponse response = await _utils.GetLongestStreak(userProfile);
 
-        await _userProfileRepo.UpdateAsync(userProfile);
-
-        return Ok(new StreakResponse { Streak = userProfile.Streak });
-    }
-
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [HttpPost("reset")]
-    public async Task<IActionResult> Reset()
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null)
-        {
-            _logger.LogInformation("Streak reset attempt with no userId.");
-            return Unauthorized();
-        }
-
-        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
-        if (userProfile == null)
-        {
-            _logger.LogInformation("User not found during streak reset attempt.");
-            return BadRequest(new MessageResponse("User not found"));
-        }
-
-        userProfile.Streak = 0;
-
-        await _userProfileRepo.UpdateAsync(userProfile);
-
-        return Ok();
+        return Ok(response);
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<StreakResponse>(StatusCodes.Status200OK)]
-    [HttpGet]
-    public async Task<IActionResult> Get()
+    [HttpGet("current")]
+    public async Task<IActionResult> GetCurrent()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
         {
-            _logger.LogInformation("Streak fetch attempt with no userId.");
+            _logger.LogInformation("Streak increase attempt with no userId.");
             return Unauthorized();
         }
 
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during streak fetch attempt.");
+            _logger.LogWarning("User not found during streak increase attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        return Ok(new StreakResponse { Streak = userProfile.Streak });
+        StreakResponse response = await _utils.GetCurrentStreak(userProfile);
+
+        return Ok(response);
     }
 }
