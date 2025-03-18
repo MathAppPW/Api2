@@ -7,4 +7,10 @@
         <RootNamespace>Models</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.EntityFrameworkCore.Abstractions">
+        <HintPath>..\..\..\..\.nuget\packages\microsoft.entityframeworkcore.abstractions\9.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>
