@@ -5,6 +5,7 @@ using MathAppApi.Shared.Cookies.Extensions;
 using MathAppApi.Shared.Emails;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
+using MathAppApi.Shared.Extensions;
 using Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 builder.Services.AddSqLiteDb();
 builder.Services.AddRepos();
+builder.Services.AddReposShared();
 builder.Services.AddAuthenticationServices();
 builder.Services.AddCookieService();
 builder.Services.AddPasswordResetDataStorage();

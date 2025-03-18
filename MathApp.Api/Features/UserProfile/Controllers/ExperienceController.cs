@@ -36,7 +36,7 @@ public class ExperienceController : ControllerBase
             _logger.LogInformation("Experience increase attempt with no userId.");
             return Unauthorized();
         }
-        Console.WriteLine(userId);
+
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
