@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Models;
 using MathAppApi.Features.UserExerciseHistory.Extensions;
+using MathAppApi.Shared.Utils.Interfaces;
 
 namespace MathApp.Api.Tests.Features.UserExerciseHistory.Controllers;
 
@@ -20,6 +21,8 @@ public class StreakControllerTests
     private Mock<ILogger<StreakController>> _loggerMock;
     private Mock<ILogger<HistoryController>> _historyLoggerMock;
     private Mock<IUserHistoryEntryRepo> _historyRepoMock;
+    private Mock<IHistoryUtils> _historyUtilsMock;
+    private List<UserHistoryEntry> _historyEntries;
     private StreakController _controller;
     private HistoryController _historyController;
 
@@ -30,8 +33,15 @@ public class StreakControllerTests
         _historyRepoMock = new Mock<IUserHistoryEntryRepo>();
         _loggerMock = new Mock<ILogger<StreakController>>();
         _historyLoggerMock = new Mock<ILogger<HistoryController>>();
-        _controller = new StreakController(_userRepoMock.Object, _historyRepoMock.Object, _loggerMock.Object);
-        _historyController = new HistoryController(_userRepoMock.Object, _historyRepoMock.Object, _historyLoggerMock.Object);
+        _historyUtilsMock = new Mock<IHistoryUtils>();
+        _historyEntries = new List<UserHistoryEntry>();
+
+        _controller = new StreakController(_userRepoMock.Object, _loggerMock.Object, _historyUtilsMock.Object);
+        _historyController = new HistoryController(_userRepoMock.Object, _historyRepoMock.Object, _historyLoggerMock.Object, _historyUtilsMock.Object);
+
+        _historyRepoMock.Setup(repo => repo.AddAsync(It.IsAny<UserHistoryEntry>()))
+            .Callback<UserHistoryEntry>(entry => _historyEntries.Add(entry))
+            .Returns(Task.CompletedTask);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[] {
             new Claim(ClaimTypes.NameIdentifier, "123")
@@ -65,6 +75,10 @@ public class StreakControllerTests
             {
                 return historyEntries.FirstOrDefault(predicate.Compile());
             });
+
+        _historyUtilsMock.Setup(h => h.GetLongestStreak(It.IsAny<Models.UserProfile>()))
+            .ReturnsAsync(new StreakResponse { Streak = 5, Start = DateTime.Today.AddDays(-14), End = DateTime.Today.AddDays(-10) });
+
 
         _historyRepoMock.Setup(repo => repo.FindAllAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<UserHistoryEntry, bool>>>()))
             .ReturnsAsync(historyEntries);
@@ -137,6 +151,9 @@ public class StreakControllerTests
         var userProfile = new Models.UserProfile { Id = "123" };
         _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Models.UserProfile, bool>>>())).ReturnsAsync(userProfile);
 
+        _historyUtilsMock.Setup(h => h.GetCurrentStreak(It.IsAny<Models.UserProfile>()))
+            .ReturnsAsync(new StreakResponse { Streak = 4, Start = DateTime.Today.AddDays(-3), End = DateTime.Today });
+
         var historyEntries = new List<UserHistoryEntry>();
 
         _historyRepoMock.Setup(repo => repo.AddAsync(It.IsAny<UserHistoryEntry>()))
@@ -186,6 +203,7 @@ public class StreakControllerTests
         Assert.IsInstanceOf<OkObjectResult>(result);
         var okResult = result as OkObjectResult;
         Assert.That(okResult, Is.Not.Null);
+        Console.WriteLine(okResult.Value == null);
 
         var response = okResult.Value as StreakResponse;
         Assert.That(response, Is.Not.Null);

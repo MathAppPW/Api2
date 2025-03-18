@@ -1,12 +1,13 @@
 ﻿using MathApp.Dal.Interfaces;
 using MathAppApi.Features.UserExerciseHistory.Dtos;
 using MathAppApi.Features.UserProfile.Controllers;
+using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
-namespace MathAppApi.Features.UserExerciseHistory.Extensions;
+namespace MathAppApi.Shared.Utils;
 
-public class HistoryUtils
+public class HistoryUtils : IHistoryUtils
 {
     private readonly IUserHistoryEntryRepo _UserHistoryEntryRepo;
 
@@ -15,7 +16,7 @@ public class HistoryUtils
         _UserHistoryEntryRepo = userHistoryEntryRepo;
     }
 
-    public async Task<StreakResponse> GetLongestStreak(Models.UserProfile userProfile)
+    public async Task<StreakResponse> GetLongestStreak(UserProfile userProfile)
     {
         List<DateTime> successDays = await GetSuccessDays(userProfile);
         if (successDays.Count == 0)
@@ -39,7 +40,7 @@ public class HistoryUtils
             if ((successDays[i] - successDays[i - 1]).Days == 1)
             {
                 currentStreak++;
-                if(currentStreak == 2)
+                if (currentStreak == 2)
                 {
                     currentStart = successDays[i - 1];
                 }
@@ -71,7 +72,7 @@ public class HistoryUtils
         };
     }
 
-    public async Task<StreakResponse> GetCurrentStreak(Models.UserProfile userProfile)
+    public async Task<StreakResponse> GetCurrentStreak(UserProfile userProfile)
     {
         List<DateTime> successDays = await GetSuccessDays(userProfile);
         if (successDays.Count == 0)
@@ -94,7 +95,7 @@ public class HistoryUtils
         {
             bool isRecentDay = successDays[i] == today || successDays[i] == yesterday;
             bool doesContinueStreak = !isRecentDay && (successDays[i + 1] - successDays[i]).Days == 1;
-            if (isRecentDay || (currentStreak > 0 && doesContinueStreak))
+            if (isRecentDay || currentStreak > 0 && doesContinueStreak)
             {
                 currentStreak++;
                 currentStart = successDays[i];
@@ -113,12 +114,11 @@ public class HistoryUtils
         };
     }
 
-    private async Task<List<DateTime>> GetSuccessDays(Models.UserProfile userProfile)
+    public async Task<List<DateTime>> GetSuccessDays(UserProfile userProfile)
     {
         List<UserHistoryEntry> history = await GetList(userProfile);
         if (history == null || history.Count == 0)
         {
-            Console.WriteLine("CHUJ");
             return [];
         }
 
@@ -137,7 +137,7 @@ public class HistoryUtils
         return successDays;
     }
 
-    public async Task<List<HistoryGetDaysResponseDay>> GetActivityPerDay(Models.UserProfile userProfile)
+    public async Task<List<HistoryGetDaysResponseDay>> GetActivityPerDay(UserProfile userProfile)
     {
         List<UserHistoryEntry> history = await GetList(userProfile);
         if (history == null || history.Count == 0)
@@ -159,7 +159,7 @@ public class HistoryUtils
             .ToList();
     }
 
-    public async Task<int> GetExercisesCountAll(Models.UserProfile userProfile)
+    public async Task<int> GetExercisesCountAll(UserProfile userProfile)
     {
         List<UserHistoryEntry> history = await GetList(userProfile);
         if (history == null || history.Count == 0)
@@ -170,7 +170,7 @@ public class HistoryUtils
         return history.Count(e => e.Success);
     }
 
-    private async Task<List<UserHistoryEntry>> GetList(Models.UserProfile userProfile)
+    public async Task<List<UserHistoryEntry>> GetList(UserProfile userProfile)
     {
         List<UserHistoryEntry> history = [];
         foreach (string entryId in userProfile.History)

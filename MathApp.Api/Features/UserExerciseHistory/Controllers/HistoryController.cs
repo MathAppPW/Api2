@@ -4,6 +4,8 @@ using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserExerciseHistory.Dtos;
 using MathAppApi.Features.UserExerciseHistory.Extensions;
+using MathAppApi.Shared.Utils;
+using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -21,14 +23,14 @@ public class HistoryController : ControllerBase
 
     private readonly ILogger<HistoryController> _logger;
 
-    private readonly HistoryUtils utils;
+    private readonly IHistoryUtils _utils;
 
-    public HistoryController(IUserProfileRepo userProfileRepo, IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<HistoryController> logger)
+    public HistoryController(IUserProfileRepo userProfileRepo, IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<HistoryController> logger, IHistoryUtils utils)
     {
         _userProfileRepo = userProfileRepo;
         _userHistoryEntryRepo = userHistoryEntryRepo;
         _logger = logger;
-        utils = new HistoryUtils(userHistoryEntryRepo);
+        _utils = utils;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -46,7 +48,7 @@ public class HistoryController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during user history entry post attempt.");
+            _logger.LogWarning("User not found during user history entry post attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
@@ -67,7 +69,7 @@ public class HistoryController : ControllerBase
         var entry = await _userHistoryEntryRepo.FindOneAsync(u => u.Id == dto.Id);
         if (entry == null)
         {
-            _logger.LogInformation("User history entry not found during fetch attempt.");
+            _logger.LogWarning("User history entry not found during fetch attempt.");
             return BadRequest(new MessageResponse("User history entry not found"));
         }
 
@@ -89,7 +91,7 @@ public class HistoryController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during user history fetch attempt.");
+            _logger.LogWarning("User not found during user history fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
@@ -99,7 +101,7 @@ public class HistoryController : ControllerBase
             var entry = await _userHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
             if (entry == null)
             {
-                _logger.LogInformation("User history entry not found during fetch attempt.");
+                _logger.LogWarning("User history entry not found during fetch attempt.");
                 return BadRequest(new MessageResponse("Invalid user history entry found"));
             }
             history.Add(entry);
@@ -123,11 +125,11 @@ public class HistoryController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during user time spent fetch attempt.");
+            _logger.LogWarning("User not found during user time spent fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        List<HistoryGetDaysResponseDay> days = await utils.GetActivityPerDay(userProfile);
+        List<HistoryGetDaysResponseDay> days = await _utils.GetActivityPerDay(userProfile);
 
         return Ok(new HistoryGetDaysResponse { Days = days });
     }
@@ -147,11 +149,11 @@ public class HistoryController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during exercises count all fetch attempt.");
+            _logger.LogWarning("User not found during exercises count all fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        int response = await utils.GetExercisesCountAll(userProfile);
+        int response = await _utils.GetExercisesCountAll(userProfile);
 
         return Ok(response);
     }
@@ -171,14 +173,14 @@ public class HistoryController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during user history delete attempt.");
+            _logger.LogWarning("User not found during user history delete attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
         var entry = await _userHistoryEntryRepo.FindOneAsync(u => u.Id == entryId);
         if (entry == null)
         {
-            _logger.LogInformation("User history entry not found during delete attempt.");
+            _logger.LogWarning("User history entry not found during delete attempt.");
             return BadRequest(new MessageResponse("User history entry not found"));
         }
 

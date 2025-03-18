@@ -2,7 +2,8 @@
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserExerciseHistory.Dtos;
-using MathAppApi.Features.UserExerciseHistory.Extensions;
+using MathAppApi.Shared.Utils;
+using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -19,13 +20,13 @@ public class StreakController : ControllerBase
 
     private readonly ILogger<StreakController> _logger;
 
-    private readonly HistoryUtils utils;
+    private readonly IHistoryUtils _utils;
 
-    public StreakController(IUserProfileRepo userProfileRepo, IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<StreakController> logger)
+    public StreakController(IUserProfileRepo userProfileRepo, ILogger<StreakController> logger, IHistoryUtils utils)
     {
         _userProfileRepo = userProfileRepo;
         _logger = logger;
-        utils = new HistoryUtils(userHistoryEntryRepo);
+        _utils = utils;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -43,11 +44,11 @@ public class StreakController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during streak increase attempt.");
+            _logger.LogWarning("User not found during streak increase attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        StreakResponse response = await utils.GetLongestStreak(userProfile);
+        StreakResponse response = await _utils.GetLongestStreak(userProfile);
 
         return Ok(response);
     }
@@ -67,11 +68,11 @@ public class StreakController : ControllerBase
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogInformation("User not found during streak increase attempt.");
+            _logger.LogWarning("User not found during streak increase attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        StreakResponse response = await utils.GetCurrentStreak(userProfile);
+        StreakResponse response = await _utils.GetCurrentStreak(userProfile);
 
         return Ok(response);
     }

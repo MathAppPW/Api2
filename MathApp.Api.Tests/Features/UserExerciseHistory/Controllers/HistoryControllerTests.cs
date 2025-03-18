@@ -12,6 +12,7 @@ using Models;
 using System.Collections.Generic;
 using System;
 using System.Linq.Expressions;
+using MathAppApi.Shared.Utils.Interfaces;
 
 namespace MathApp.Api.Tests.Features.UserExerciseHistory.Controllers;
 
@@ -21,6 +22,7 @@ public class HistoryControllerTests
     private Mock<IUserProfileRepo> _userRepoMock;
     private Mock<IUserHistoryEntryRepo> _historyRepoMock;
     private Mock<ILogger<HistoryController>> _loggerMock;
+    private Mock<IHistoryUtils> _historyUtils;
     private HistoryController _controller;
 
     [SetUp]
@@ -29,7 +31,8 @@ public class HistoryControllerTests
         _userRepoMock = new Mock<IUserProfileRepo>();
         _historyRepoMock = new Mock<IUserHistoryEntryRepo>();
         _loggerMock = new Mock<ILogger<HistoryController>>();
-        _controller = new HistoryController(_userRepoMock.Object, _historyRepoMock.Object, _loggerMock.Object);
+        _historyUtils = new Mock<IHistoryUtils>();
+        _controller = new HistoryController(_userRepoMock.Object, _historyRepoMock.Object, _loggerMock.Object, _historyUtils.Object);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
