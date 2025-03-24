@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<ILessonRepo, LessonRepo>();
         services.AddScoped<ISeriesRepo, SeriesRepo>();
         services.AddScoped<ISubjectRepo, SubjectRepo>();
+        services.AddScoped<IUserHistoryEntryRepo, UserHistoryEntryRepo>();
+
     }
 
     public static void AddSqLiteDb(this IServiceCollection services, string connectionString = SqLiteConnectionString)

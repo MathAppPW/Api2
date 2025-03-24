@@ -12,6 +12,7 @@ public class MathAppDbContext : DbContext
     public DbSet<Lesson> Lessons { get; set; }
     public DbSet<Series> Series { get; set; }
     public DbSet<Exercise> Exercises { get; set; }
+    public DbSet<UserHistoryEntry> UserHistoryEntries { get; set; }
 
     public MathAppDbContext(DbContextOptions<MathAppDbContext> options) : base(options)
     {

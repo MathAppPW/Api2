@@ -47,11 +47,8 @@ public class LivesControllerTests
         var okResult = (OkObjectResult)result;
         var response = okResult.Value as LivesResponse;
         Assert.That(response, Is.Not.Null);
-        if (response != null)
-        {
-            Assert.That(response.Lives, Is.GreaterThanOrEqualTo(5));
-            Assert.That(response.SecondsToHeal, Is.GreaterThanOrEqualTo(0));
-        }
+        Assert.That(response.Lives, Is.GreaterThanOrEqualTo(5));
+        Assert.That(response.SecondsToHeal, Is.GreaterThanOrEqualTo(0));
     }
 
     [Test]
@@ -85,12 +82,9 @@ public class LivesControllerTests
 
         Assert.IsInstanceOf<OkObjectResult>(result);
         var okResult = (OkObjectResult)result;
-        var livesRemaining = okResult.Value as int?;
-        Assert.That(livesRemaining, Is.Not.Null);
-        if (livesRemaining != null)
-        {
-            Assert.That(livesRemaining, Is.EqualTo(4));
-        }
+        var response = okResult.Value as LivesResponse;
+        Assert.That(response, Is.Not.Null);
+        Assert.That(response.Lives, Is.EqualTo(4));
     }
 
     [Test]
@@ -124,12 +118,9 @@ public class LivesControllerTests
 
         Assert.IsInstanceOf<OkObjectResult>(result);
         var okResult = (OkObjectResult)result;
-        var livesRemaining = okResult.Value as int?;
-        Assert.That(livesRemaining, Is.Not.Null);
-        if (livesRemaining != null)
-        {
-            Assert.That(livesRemaining, Is.EqualTo(6));
-        }
+        var response = okResult.Value as LivesResponse;
+        Assert.That(response, Is.Not.Null);
+        Assert.That(response.Lives, Is.EqualTo(6));
     }
 
     [Test]
