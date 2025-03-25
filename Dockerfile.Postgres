@@ -1,0 +1,26 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY . .
+RUN dotnet restore "MathApp.Api/MathApp.Api.csproj"
+
+WORKDIR "/src/MathApp.Api"
+RUN dotnet publish "MathApp.Api.csproj" -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DB_ENVIRONMENT=postgresql
+
+RUN mkdir -p /app/certs
+COPY certs/us-east-1-bundle.pem /app/certs/us-east-1-bundle.pem
+
+ENV CONNECTION_STRING=Host=database-1.cgd4sa8morcm.us-east-1.rds.amazonaws.com;Database=mathapppw-main;Username=server;Password=supersecurepassword;SslMode=VerifyFull;RootCertificate=/app/certs/us-east-1-bundle.pem;
+
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "MathApp.Api.dll"]
