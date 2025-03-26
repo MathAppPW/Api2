@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using MathAppApi.Shared.Extensions;
 using Models;
+using MathAppApi.Features.UserExerciseHistory.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddSqLiteDb();
 builder.Services.AddRepos();
 builder.Services.AddReposShared();
+builder.Services.AddHistoryServices();
 builder.Services.AddAuthenticationServices();
 builder.Services.AddCookieService();
 builder.Services.AddPasswordResetDataStorage();
