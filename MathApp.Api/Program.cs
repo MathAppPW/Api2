@@ -12,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
-builder.Services.AddSqLiteDb();
+
+var dbEnv = Environment.GetEnvironmentVariable("DB_ENVIRONMENT");
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+builder.Services.AddDbFromEnvironment(dbEnv, connectionString);
+
 builder.Services.AddRepos();
 builder.Services.AddReposShared();
 builder.Services.AddAuthenticationServices();
