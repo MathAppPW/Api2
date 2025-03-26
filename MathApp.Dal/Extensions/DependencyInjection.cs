@@ -1,6 +1,7 @@
 using MathApp.Dal.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Models;
 
 namespace Dal.Extensions;
 
@@ -13,6 +14,10 @@ public static class DependencyInjection
         services.AddScoped<IUserRepo, UserRepo>();
         services.AddScoped<IUserProfileRepo, UserProfileRepo>();
         services.AddScoped<IUserHistoryEntryRepo, UserHistoryEntryRepo>();
+        services.AddScoped<IChapterRepo, ChapterRepo>();
+        services.AddScoped<ILessonRepo, LessonRepo>();
+        services.AddScoped<IExerciseRepo, ExerciseRepo>();
+        services.AddScoped<ISeriesRepo, SeriesRepo>();
     }
 
     public static void AddDbFromEnvironment(this IServiceCollection services, string? dbEnvironment,

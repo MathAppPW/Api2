@@ -14,7 +14,7 @@ public class UserHistoryEntry
     [Required]
     public string ExerciseId { get; set; } = "";
     [Required]
-    public string SeriesId { get; set; } = "";
+    public int SeriesId { get; set; }
     [Required]
     public DateTime Date { get; set; } = DateTime.UtcNow;
     [Required]

@@ -8,6 +8,8 @@ using Microsoft.OpenApi.Models;
 using MathAppApi.Shared.Extensions;
 using Models;
 using MathAppApi.Features.UserExerciseHistory.Extensions;
+using MathAppApi.Features.Exercise.Extensions;
+using MathAppApi.Features.UserProgress.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +22,8 @@ builder.Services.AddDbFromEnvironment(dbEnv, connectionString);
 
 builder.Services.AddRepos();
 builder.Services.AddReposShared();
-builder.Services.AddHistoryServices();
+builder.Services.AddExerciseServices();
+builder.Services.AddProgressServices();
 builder.Services.AddAuthenticationServices();
 builder.Services.AddCookieService();
 builder.Services.AddPasswordResetDataStorage();

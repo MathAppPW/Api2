@@ -3,14 +3,14 @@ using MathAppApi.Features.Authentication.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using MathAppApi.Features.Progress.Services.Interfaces;
-using MathAppApi.Features.Progress.Services;
+using MathAppApi.Features.UserProgress.Services;
+using MathAppApi.Features.UserProgress.Services.Interfaces;
 
-namespace MathAppApi.Features.UserExerciseHistory.Extensions;
+namespace MathAppApi.Features.UserProgress.Extensions;
 
 public static class DependencyInjection
 {
-    public static void AddHistoryServices(this IServiceCollection services)
+    public static void AddProgressServices(this IServiceCollection services)
     {
         services.AddScoped<IProgressService, ProgressService>();
     }
