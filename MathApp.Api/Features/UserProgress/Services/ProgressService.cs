@@ -33,9 +33,6 @@ public class ProgressService : IProgressService
     public async Task<ChaptersProgressResponse> GetChaptersProgressAsync(Models.UserProfile userProfile)
     {
         var chapters = await _chapterRepo.GetAllAsync();
-        Console.WriteLine("");
-        Console.WriteLine(chapters.Count);
-        Console.WriteLine("");
 
         var result = new Dictionary<Chapter, float>();
 
