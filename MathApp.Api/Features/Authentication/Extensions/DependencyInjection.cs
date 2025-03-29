@@ -35,6 +35,7 @@ public static class DependencyInjection
                     ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!))
                 };
+                options.MapInboundClaims = false;
             });
     }
 }

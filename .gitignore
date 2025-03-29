@@ -28,6 +28,8 @@ riderModule.iml
 *.dotCover
 *.log
 *.vsconfig
+*.db-shm
+*.db-wal
 
 
 ## Nuget
