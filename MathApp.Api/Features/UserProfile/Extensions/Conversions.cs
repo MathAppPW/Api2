@@ -9,9 +9,12 @@ public static class Conversions
 {
     public static UserProfileResponse ToDto(this Models.UserProfile userProfile)
     {
+        if (userProfile.User == null)
+            throw new InvalidOperationException("User has not been loaded!");
+        
         return new UserProfileResponse
         {
-            Id = userProfile.Id,
+            Username = userProfile.User.Username,
             Level = userProfile.Level,
             Experience = userProfile.Experience,
             Streak = userProfile.Streak,
