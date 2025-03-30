@@ -9,6 +9,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using System;
+using System.Linq.Expressions;
+using Models;
 
 namespace MathApp.Api.Tests.Features.UserProfile.Controllers;
 
@@ -26,10 +28,9 @@ public class UserProfileControllerTests
         _loggerMock = new Mock<ILogger<UserProfileController>>();
         _controller = new UserProfileController(_userRepoMock.Object, _loggerMock.Object);
 
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-                new Claim(ClaimTypes.NameIdentifier, "123")
-            }, "mock"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim(ClaimTypes.NameIdentifier, "123")
+        ], "mock"));
 
         _controller.ControllerContext = new ControllerContext
         {
@@ -43,6 +44,13 @@ public class UserProfileControllerTests
         var userProfile = new Models.UserProfile
         {
             Id = "123",
+            User = new User()
+            {
+                Id = "123",
+                Email = "test@mail.com",
+                PasswordHash = "passwordHash",
+                Username = "username"
+            },
             Level = 5,
             Experience = 2500,
             Streak = 10,
@@ -51,7 +59,8 @@ public class UserProfileControllerTests
             RocketSkin = 2,
             ProfileSkin = 1
         };
-        _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Models.UserProfile, bool>>>())).ReturnsAsync(userProfile);
+        _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<Expression<Func<Models.UserProfile, bool>>>()))
+            .ReturnsAsync(userProfile);
 
         var result = await _controller.Get();
 
@@ -61,7 +70,7 @@ public class UserProfileControllerTests
         Assert.That(response, Is.Not.Null);
         if (response != null)
         {
-            Assert.That(response.Id, Is.EqualTo("123"));
+            Assert.That(response.Username, Is.EqualTo("username"));
             Assert.That(response.Level, Is.EqualTo(5));
             Assert.That(response.Experience, Is.EqualTo(2500));
             Assert.That(response.Streak, Is.EqualTo(10));
