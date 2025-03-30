@@ -2,6 +2,6 @@
 
 namespace MathApp.Dal.Interfaces;
 
-public interface IUserProfileRepo : IRepo<UserProfile>
+public interface IUserProfileRepo : IRelatedRepo<UserProfile>
 {
 }

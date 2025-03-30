@@ -3,7 +3,7 @@ using Models;
 
 namespace Dal;
 
-public class UserProfileRepo : BaseRepo<UserProfile>, IUserProfileRepo
+public class UserProfileRepo : BaseRelatedRepo<UserProfile>, IUserProfileRepo
 {
     public UserProfileRepo(MathAppDbContext db) : base(db)
     {
