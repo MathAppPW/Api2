@@ -31,8 +31,8 @@ public class ExerciseController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ExerciseResponse>(StatusCodes.Status200OK)]
-    [HttpPost]
-    public async Task<IActionResult> GetExercises([FromBody] ExerciseDto dto)
+    [HttpGet("{chapterName}/{subjectName}/{lessonId}/{seriesId}")]
+    public async Task<IActionResult> GetExercises(string chapterName, string subjectName, int lessonId, int seriesId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -48,6 +48,13 @@ public class ExerciseController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
+        var dto = new ExerciseDto
+        {
+            ChapterName = chapterName,
+            SubjectName = subjectName,
+            LessonId = lessonId,
+            SeriesId = seriesId
+        };
         var response = await _exerciseService.GetExercises(userProfile, dto);
 
         return Ok(response);
