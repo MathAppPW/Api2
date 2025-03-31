@@ -1,7 +1,4 @@
-﻿using Dal;
-using MathApp.Dal.Interfaces;
-using MathAppApi.Features.Authentication.Dtos;
-using MathAppApi.Features.UserExerciseHistory.Controllers;
+﻿using MathAppApi.Features.UserExerciseHistory.Controllers;
 using MathAppApi.Features.Exercise.Dtos;
 using MathAppApi.Features.Exercise.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,24 +12,20 @@ namespace MathAppApi.Features.UserProgress.Controllers;
 [Route("[controller]")]
 public class ExerciseController : ControllerBase
 {
-    private readonly IUserProfileRepo _userProfileRepo;
-
     private readonly ILogger<HistoryController> _logger;
 
     private readonly IExerciseService _exerciseService;
 
 
-    public ExerciseController(IUserProfileRepo userProfileRepo, ILogger<HistoryController> logger, IExerciseService progressService)
+    public ExerciseController(ILogger<HistoryController> logger, IExerciseService progressService)
     {
-        _userProfileRepo = userProfileRepo;
         _logger = logger;
         _exerciseService = progressService;
     }
 
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ExerciseResponse>(StatusCodes.Status200OK)]
-    [HttpGet("{chapterName}/{subjectName}/{lessonId}/{seriesId}")]
-    public async Task<IActionResult> GetExercises(string chapterName, string subjectName, int lessonId, int seriesId)
+    [HttpGet("{seriesId}")]
+    public async Task<IActionResult> GetExercises(int seriesId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -41,21 +34,29 @@ public class ExerciseController : ControllerBase
             return Unauthorized();
         }
 
-        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
-        if (userProfile == null)
+        var response = await _exerciseService.GetExercises(seriesId);
+
+        return Ok(response);
+    }
+
+    [ProducesResponseType<SeriesResponse>(StatusCodes.Status200OK)]
+    [HttpGet("series/{chapterName}/{subjectName}/{lessonId}")]
+    public async Task<IActionResult> GetSeries(string chapterName, string subjectName, int lessonId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
-            _logger.LogWarning("User not found during exercises fetch attempt.");
-            return BadRequest(new MessageResponse("User not found"));
+            _logger.LogInformation("Series fetch attempt with no userId.");
+            return Unauthorized();
         }
 
-        var dto = new ExerciseDto
+        var dto = new SeriesDto
         {
             ChapterName = chapterName,
             SubjectName = subjectName,
             LessonId = lessonId,
-            SeriesId = seriesId
         };
-        var response = await _exerciseService.GetExercises(userProfile, dto);
+        var response = await _exerciseService.GetSeries(dto);
 
         return Ok(response);
     }
