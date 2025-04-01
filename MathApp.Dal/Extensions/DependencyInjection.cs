@@ -1,6 +1,7 @@
 using MathApp.Dal.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Models;
 
 namespace Dal.Extensions;
 
@@ -13,6 +14,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepo, UserRepo>();
         services.AddScoped<IUserProfileRepo, UserProfileRepo>();
         services.AddScoped<IUserHistoryEntryRepo, UserHistoryEntryRepo>();
+        services.AddScoped<IFriendshipRepo, FriendshipRepo>();
+        services.AddScoped<IFriendRequestRepo, FriendRequestRepo>();
     }
 
     public static void AddSqLiteDb(this IServiceCollection services, string connectionString = SqLiteConnectionString)
