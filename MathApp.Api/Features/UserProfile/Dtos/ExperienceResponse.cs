@@ -7,7 +7,5 @@ public class ExperienceResponse
     [Required]
     public int Level { get; set; } = 0;
     [Required]
-    public int Experience { get; set; } = 0;
-    [Required]
-    public bool LeveledUp { get; set; } = false;
+    public float Progress { get; set; } = 0f;
 }

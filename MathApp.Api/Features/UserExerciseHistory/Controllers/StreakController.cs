@@ -37,14 +37,14 @@ public class StreakController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
         {
-            _logger.LogInformation("Streak increase attempt with no userId.");
+            _logger.LogInformation("Longest streak fetch attempt with no userId.");
             return Unauthorized();
         }
 
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogWarning("User not found during streak increase attempt.");
+            _logger.LogWarning("User not found during longest streak fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
@@ -61,18 +61,42 @@ public class StreakController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
         {
-            _logger.LogInformation("Streak increase attempt with no userId.");
+            _logger.LogInformation("Current streak fetch attempt with no userId.");
             return Unauthorized();
         }
 
         var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
         if (userProfile == null)
         {
-            _logger.LogWarning("User not found during streak increase attempt.");
+            _logger.LogWarning("User not found during current streak fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
         StreakResponse response = await _utils.GetCurrentStreak(userProfile);
+
+        return Ok(response);
+    }
+
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<List<StreakResponse>>(StatusCodes.Status200OK)]
+    [HttpGet("callendar")]
+    public async Task<IActionResult> GetCallendar()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+        {
+            _logger.LogInformation("All streaks fetch attempt with no userId.");
+            return Unauthorized();
+        }
+
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
+        {
+            _logger.LogWarning("User not found during all streaks fetch attempt.");
+            return BadRequest(new MessageResponse("User not found"));
+        }
+
+        List<StreakResponse> response = await _utils.GetStreakCallendar(userProfile);
 
         return Ok(response);
     }

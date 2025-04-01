@@ -153,7 +153,7 @@ public class HistoryController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        int response = await _utils.GetExercisesCountAll(userProfile);
+        int response = await _utils.GetExercisesCountSuccessful(userProfile);
 
         return Ok(response);
     }

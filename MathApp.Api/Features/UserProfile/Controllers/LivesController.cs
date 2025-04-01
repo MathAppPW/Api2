@@ -15,7 +15,7 @@ namespace MathAppApi.Features.UserProfile.Controllers;
 public class LivesController : ControllerBase
 {
     private static readonly int _livesUpdateInterval = 5;
-    private static readonly int _maxLives = 10;
+    private static readonly int _maxLives = 5;
     private readonly IUserProfileRepo _userProfileRepo;
 
     private readonly ILogger<LivesController> _logger;
