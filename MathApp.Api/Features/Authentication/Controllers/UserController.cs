@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using System.Security.Claims;
 
 namespace MathAppApi.Features.Authentication.Controllers;
 
@@ -194,7 +195,35 @@ public class UserController : ControllerBase
         await _userRepo.UpdateAsync(user);
         return Ok();
     }
-    
+
+    [Authorize]
+    [ProducesResponseType<EmailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HttpGet("email")]
+    public async Task<IActionResult> GetEmail()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+        {
+            _logger.LogInformation("User email fetch attempt with no userId.");
+            return Unauthorized();
+        }
+
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+        {
+            _logger.LogError($"User with id {userId} not find in email fetch!");
+            return BadRequest();
+        }
+
+        return Ok(new EmailResponse()
+        {
+            Email = user.Email,
+            Username = user.Username
+        });
+    }
+
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [Authorize]

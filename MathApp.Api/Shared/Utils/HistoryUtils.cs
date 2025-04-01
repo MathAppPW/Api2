@@ -114,6 +114,50 @@ public class HistoryUtils : IHistoryUtils
         };
     }
 
+    public async Task<List<StreakResponse>> GetStreakCallendar(UserProfile userProfile)
+    {
+        List<DateTime> successDays = await GetSuccessDays(userProfile);
+        List<StreakResponse> streaks = new List<StreakResponse>();
+
+        if (successDays.Count == 0)
+            return streaks;
+
+        DateTime streakStart = successDays[0];
+        DateTime previousDay = successDays[0];
+        int currentStreak = 1;
+
+        for (int i = 1; i < successDays.Count; i++)
+        {
+            if ((successDays[i] - previousDay).Days == 1)
+            {
+                currentStreak++;
+            }
+            else
+            {
+                streaks.Add(new StreakResponse
+                {
+                    Streak = currentStreak,
+                    Start = streakStart,
+                    End = previousDay
+                });
+
+                streakStart = successDays[i];
+                currentStreak = 1;
+            }
+
+            previousDay = successDays[i];
+        }
+
+        streaks.Add(new StreakResponse
+        {
+            Streak = currentStreak,
+            Start = streakStart,
+            End = previousDay
+        });
+
+        return streaks;
+    }
+
     public async Task<List<DateTime>> GetSuccessDays(UserProfile userProfile)
     {
         List<UserHistoryEntry> history = await GetList(userProfile);
@@ -159,7 +203,7 @@ public class HistoryUtils : IHistoryUtils
             .ToList();
     }
 
-    public async Task<int> GetExercisesCountAll(UserProfile userProfile)
+    public async Task<int> GetExercisesCountSuccessful(UserProfile userProfile)
     {
         List<UserHistoryEntry> history = await GetList(userProfile);
         if (history == null || history.Count == 0)

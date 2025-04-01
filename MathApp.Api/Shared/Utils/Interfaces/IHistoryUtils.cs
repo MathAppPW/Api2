@@ -12,8 +12,9 @@ public interface IHistoryUtils
 {
     public Task<StreakResponse> GetLongestStreak(UserProfile userProfile);
     public Task<StreakResponse> GetCurrentStreak(UserProfile userProfile);
+    public Task<List<StreakResponse>> GetStreakCallendar(UserProfile userProfile);
     public Task<List<DateTime>> GetSuccessDays(UserProfile userProfile);
     public Task<List<HistoryGetDaysResponseDay>> GetActivityPerDay(UserProfile userProfile);
-    public Task<int> GetExercisesCountAll(UserProfile userProfile);
+    public Task<int> GetExercisesCountSuccessful(UserProfile userProfile);
     public Task<List<UserHistoryEntry>> GetList(UserProfile userProfile);
 }
