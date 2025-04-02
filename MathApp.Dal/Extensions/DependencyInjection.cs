@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepo, UserRepo>();
         services.AddScoped<IUserProfileRepo, UserProfileRepo>();
         services.AddScoped<IUserHistoryEntryRepo, UserHistoryEntryRepo>();
+        services.AddScoped<IFriendshipRepo, FriendshipRepo>();
+        services.AddScoped<IFriendRequestRepo, FriendRequestRepo>();
         services.AddScoped<IChapterRepo, ChapterRepo>();
         services.AddScoped<ILessonRepo, LessonRepo>();
         services.AddScoped<IExerciseRepo, ExerciseRepo>();

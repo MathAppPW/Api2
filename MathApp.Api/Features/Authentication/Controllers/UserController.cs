@@ -196,6 +196,36 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [Authorize]
+    [HttpDelete("remove")]
+    public async Task<IActionResult> RemoveAccount([FromBody] ResetPasswordDto dto)
+    {
+        var userId = User.FindFirst("sub")?.Value;
+        foreach (var claim in User.Claims)
+            Console.WriteLine($"TYPE, VALUE: {claim.Type} {claim.Value}");
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogError("Valid token has no sub value!");
+            throw new InvalidOperationException("'sub' value has not been found in auth token");
+            _logger.LogError("User with valid token has not been found in RemoveAccount");
+            return Ok();
+        }
+
+        if (_passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password) ==
+            PasswordVerificationResult.Failed)
+        {
+            return Unauthorized();
+        }
+        
+        await _userRepo.RemoveAsync(user);
+        
+        return Ok();
+    }
+
+
     [Authorize]
     [ProducesResponseType<EmailResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -223,6 +253,8 @@ public class UserController : ControllerBase
             Username = user.Username
         });
     }
+
+            
 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
