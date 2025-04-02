@@ -45,19 +45,14 @@ public class ExperienceController : ControllerBase
         }
 
         userProfile.Experience += dto.Amount;
-        var leveledUp = false;
-        if(userProfile.Experience / 1000 + 1 > userProfile.Level)
-        {
-            userProfile.Level = userProfile.Experience / 1000 + 1;
-            leveledUp = true;
-        }
+        userProfile.Level = userProfile.Experience / 1000 + 1;
 
         await _userProfileRepo.UpdateAsync(userProfile);
 
         return Ok(new ExperienceResponse {
-            LeveledUp = leveledUp,
             Level = userProfile.Level,
-            Experience = userProfile.Experience });
+            Progress = userProfile.Experience % 1000 / 1000f
+        });
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -81,9 +76,8 @@ public class ExperienceController : ControllerBase
 
         return Ok(new ExperienceResponse
         {
-            LeveledUp = false,
             Level = userProfile.Level,
-            Experience = userProfile.Experience
+            Progress = userProfile.Experience % 1000 / 1000f
         });
     }
 }

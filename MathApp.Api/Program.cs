@@ -7,14 +7,23 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using MathAppApi.Shared.Extensions;
 using Models;
+using MathAppApi.Features.UserExerciseHistory.Extensions;
+using MathAppApi.Features.Exercise.Extensions;
+using MathAppApi.Features.UserProgress.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
-builder.Services.AddSqLiteDb();
+
+var dbEnv = Environment.GetEnvironmentVariable("DB_ENVIRONMENT");
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+builder.Services.AddDbFromEnvironment(dbEnv, connectionString);
+
 builder.Services.AddRepos();
 builder.Services.AddReposShared();
+builder.Services.AddExerciseServices();
+builder.Services.AddProgressServices();
 builder.Services.AddAuthenticationServices();
 builder.Services.AddCookieService();
 builder.Services.AddPasswordResetDataStorage();

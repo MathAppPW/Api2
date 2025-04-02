@@ -45,6 +45,7 @@ public class UserProfileController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
+        await _userProfileRepo.LoadMemberAsync(userProfile, u => u.User);
         return Ok(userProfile.ToDto());
     }
 }
