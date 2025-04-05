@@ -1,6 +1,6 @@
 using MathAppApi.Features.UserExerciseHistory.Dtos;
 
-namespace MathAppApi.Features.Friends.Dto;
+namespace MathAppApi.Features.Friends.Dtos;
 
 public class FriendProfileDto
 {

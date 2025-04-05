@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MathAppApi.Features.Friends.Dto;
+namespace MathAppApi.Features.Friends.Dtos;
 
 public class FriendRequestResponse
 {
