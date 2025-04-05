@@ -1,12 +1,13 @@
 using Dal;
 using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Friends.Dto;
+using MathAppApi.Features.Friends.Dtos;
 using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
-namespace MathAppApi.Features.Friends;
+namespace MathAppApi.Features.Friends.Controllers;
 
 [Authorize]
 [ApiController]
@@ -45,10 +46,10 @@ public class FriendsController : ControllerBase
             return BadRequest();
 
         var isDuplicate = await _friendshipRepo.AnyAsync(f =>
-            (f.UserId1 == senderId && f.UserId2 == receiver.Id) || (f.UserId2 == senderId && f.UserId1 == receiver.Id));
+            f.UserId1 == senderId && f.UserId2 == receiver.Id || f.UserId2 == senderId && f.UserId1 == receiver.Id);
         if (isDuplicate)
             return BadRequest("Friendship already exists");
-        
+
         var request = new FriendRequest()
         {
             ReceiverUserId = receiver.Id,
@@ -82,7 +83,7 @@ public class FriendsController : ControllerBase
         });
         return Ok(dtos);
     }
-    
+
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -107,7 +108,7 @@ public class FriendsController : ControllerBase
         }
         else
             await _friendRequestRepo.RemoveAsync(request);
-        
+
         return Ok();
     }
 
@@ -123,13 +124,13 @@ public class FriendsController : ControllerBase
         if (user == null)
             return NotFound();
         var friendship = await _friendshipRepo.FindOneAsync(fr =>
-            (fr.UserId1 == userId && fr.UserId2 == user.Id) || (fr.UserId1 == user.Id && fr.UserId2 == userId));
+            fr.UserId1 == userId && fr.UserId2 == user.Id || fr.UserId1 == user.Id && fr.UserId2 == userId);
         if (friendship == null)
             return NotFound();
         await _friendshipRepo.RemoveAsync(friendship);
         return Ok();
     }
-    
+
     [ProducesResponseType<List<FriendProfileDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [HttpGet("friends")]

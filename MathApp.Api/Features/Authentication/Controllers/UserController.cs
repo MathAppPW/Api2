@@ -214,6 +214,13 @@ public class UserController : ControllerBase
             return Ok();
         }
 
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+        {
+            _logger.LogError($"User with id {userId} not find in remove account!");
+            return StatusCode(500);
+        }
+
         if (_passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password) ==
             PasswordVerificationResult.Failed)
         {
