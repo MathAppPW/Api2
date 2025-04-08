@@ -34,7 +34,7 @@ public class ProgressService : IProgressService
     {
         var chapters = await _chapterRepo.GetAllAsync();
 
-        var result = new Dictionary<Chapter, float>();
+        var result = new Dictionary<Chapter, ProgressDto>();
 
         foreach (var chapter in chapters)
         {
@@ -48,10 +48,25 @@ public class ProgressService : IProgressService
             var sum = 0f;
             foreach (var progress in subjectsProgress.Progress)
             {
-                sum += progress.Value;
+                sum += progress.Value.ExercisesCompletedPercent;
             }
 
-            result[chapter] = sum / subjectsProgress.Progress.Count;
+            var fullyCompleted = 0;
+            foreach (var progress in subjectsProgress.Progress)
+            {
+                if(progress.Value.ExercisesCompletedPercent == 1f)
+                {
+                    fullyCompleted++;
+                }
+            }
+
+            var percent = sum / subjectsProgress.Progress.Count;
+            result[chapter] = new ProgressDto
+            {
+                Completed = fullyCompleted,
+                All = subjectsProgress.Progress.Count,
+                ExercisesCompletedPercent = percent
+            };
         }
 
         return new ChaptersProgressResponse
@@ -72,7 +87,7 @@ public class ProgressService : IProgressService
         }
 
         var subjectsList = chapter.Subjects;
-        var result = new Dictionary<Subject, float>();
+        var result = new Dictionary<Subject, ProgressDto>();
 
         foreach (var subject in subjectsList)
         {
@@ -86,10 +101,25 @@ public class ProgressService : IProgressService
             var sum = 0f;
             foreach (var progress in lessonsProgress.Progress)
             {
-                sum += progress.Value;
+                sum += progress.Value.ExercisesCompletedPercent;
             }
 
-            result[subject] = sum / lessonsProgress.Progress.Count;
+            var fullyCompleted = 0;
+            foreach (var progress in lessonsProgress.Progress)
+            {
+                if(progress.Value.ExercisesCompletedPercent == 1f)
+                {
+                    fullyCompleted++;
+                }
+            }
+
+            var percent = sum / lessonsProgress.Progress.Count;
+            result[subject] = new ProgressDto
+            {
+                Completed = fullyCompleted,
+                All = lessonsProgress.Progress.Count,
+                ExercisesCompletedPercent = percent
+            };
         }
 
         return new SubjectsProgressResponse
@@ -118,7 +148,7 @@ public class ProgressService : IProgressService
         }
 
         var lessonsList = subject.Lessons;
-        var result = new Dictionary<Lesson, float>();
+        var result = new Dictionary<Lesson, ProgressDto>();
 
         foreach (var lesson in lessonsList)
         {
@@ -127,8 +157,13 @@ public class ProgressService : IProgressService
                 series.Exercises.All(e => history.Any(h => h.ExerciseId == e.Id.ToString() && h.SeriesId == series.Id && h.Success))
             );
 
-            var progress = seriesList.Count > 0 ? completedSeries / seriesList.Count : 0;
-            result[lesson] = progress;
+            var percent = seriesList.Count > 0 ? completedSeries / seriesList.Count : 0;
+            result[lesson] = new ProgressDto
+            {
+                Completed = completedSeries,
+                All = seriesList.Count,
+                ExercisesCompletedPercent = percent
+            };
         }
 
         return new LessonsProgressResponse

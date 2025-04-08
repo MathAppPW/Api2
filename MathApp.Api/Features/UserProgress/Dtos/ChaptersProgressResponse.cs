@@ -2,5 +2,5 @@
 
 public class ChaptersProgressResponse
 {
-    public Dictionary<Models.Chapter, float> Progress { get; set; } = [];
+    public Dictionary<Models.Chapter, ProgressDto> Progress { get; set; } = [];
 }
