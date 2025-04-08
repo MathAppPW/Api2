@@ -1,4 +1,5 @@
-﻿using MathApp.Dal.Interfaces;
+﻿using Dal;
+using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Friends.Dtos;
 using MathAppApi.Features.UserProfile.Controllers;
@@ -18,21 +19,23 @@ public class SearchController : ControllerBase
 {
     private readonly IUserProfileRepo _userProfileRepo;
     private readonly IUserRepo _userRepo;
+    private readonly IFriendshipRepo _friendshipRepo;
 
     private readonly ILogger<SearchController> _logger;
 
     private readonly IHistoryUtils _utils;
 
-    public SearchController(IUserProfileRepo userProfileRepo, IUserRepo userRepo, ILogger<SearchController> logger, IHistoryUtils historyUtils)
+    public SearchController(IUserProfileRepo userProfileRepo, IUserRepo userRepo, IFriendshipRepo friendshipRepo, ILogger<SearchController> logger, IHistoryUtils historyUtils)
     {
         _userProfileRepo = userProfileRepo;
         _userRepo = userRepo;
+        _friendshipRepo = friendshipRepo;
         _logger = logger;
         _utils = historyUtils;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ExperienceResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UserSearchResponse>(StatusCodes.Status200OK)]
     [HttpPost("search/{username}")]
     public async Task<IActionResult> SearchShort(string username)
     {
@@ -67,7 +70,8 @@ public class SearchController : ControllerBase
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ExperienceResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProfileSearchResponse>(StatusCodes.Status200OK)]
     [HttpPost("search-verbose/{username}")]
     public async Task<IActionResult> SearchVerbose(string username)
     {
@@ -95,6 +99,19 @@ public class SearchController : ControllerBase
         var longestStreak = await _utils.GetLongestStreak(userProfile);
         var exercisesCompleted = await _utils.GetExercisesCountSuccessful(userProfile);
 
+        var friendUser = await _userRepo.FindOneAsync(u => u.Username == username);
+        if (friendUser == null)
+            return NotFound();
+
+        var friendship = await _friendshipRepo.FindOneAsync(fr =>
+            fr.UserId1 == userId && fr.UserId2 == friendUser.Id || fr.UserId1 == friendUser.Id && fr.UserId2 == userId);
+
+        var isFriend = false;
+        if(friendship != null)
+        {
+            isFriend = true;
+        }
+
         return Ok(new ProfileSearchResponse
         {
             Level = userProfile.Level,
@@ -103,6 +120,7 @@ public class SearchController : ControllerBase
             Streak = userProfile.Streak,
             MaxStreak = longestStreak.Streak,
             ExercisesCompleted = exercisesCompleted,
+            IsFriend = isFriend
         });
     }
 }
