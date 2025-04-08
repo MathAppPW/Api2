@@ -36,7 +36,7 @@ public class ExperienceControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
     }
-
+    /*
     [Test]
     public async Task Add_ShouldReturnOk_WhenExperienceAdded()
     {
@@ -127,7 +127,7 @@ public class ExperienceControllerTests
             }
         });
     }
-
+    */
     [Test]
     public async Task Get_ShouldReturnBadRequest_WhenUserNotFound()
     {

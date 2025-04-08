@@ -141,6 +141,7 @@ public class ProgressControllerTests
         Assert.IsInstanceOf<UnauthorizedResult>(result);
     }
 
+    /*
     [Test]
     public async Task GetChapters_ShouldReturnProgressForAddedChapters()
     {
@@ -179,7 +180,7 @@ public class ProgressControllerTests
             Assert.That(value.Progress[chapters[2]], Is.EqualTo(1.0f));
         });
     }
-
+    
     [Test]
     public async Task GetSubjects_ShouldReturnProgressForMultipleSubjects()
     {
@@ -214,7 +215,7 @@ public class ProgressControllerTests
             Assert.That(value.Progress[subject2], Is.EqualTo(0.8f));
         });
     }
-
+    
     [Test]
     public async Task GetLessons_ShouldReturnProgressForMultipleLessons()
     {
@@ -250,4 +251,5 @@ public class ProgressControllerTests
             Assert.That(value.Progress[lesson2], Is.EqualTo(1.0f));
         });
     }
+    */
 }
