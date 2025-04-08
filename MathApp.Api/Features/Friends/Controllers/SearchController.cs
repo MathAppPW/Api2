@@ -36,7 +36,7 @@ public class SearchController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<UserSearchResponse>(StatusCodes.Status200OK)]
-    [HttpPost("search/{username}")]
+    [HttpGet("search/{username}")]
     public async Task<IActionResult> SearchShort(string username)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -72,7 +72,7 @@ public class SearchController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProfileSearchResponse>(StatusCodes.Status200OK)]
-    [HttpPost("search-verbose/{username}")]
+    [HttpGet("search-verbose/{username}")]
     public async Task<IActionResult> SearchVerbose(string username)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
