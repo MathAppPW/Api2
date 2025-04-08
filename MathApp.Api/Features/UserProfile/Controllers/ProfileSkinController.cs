@@ -36,7 +36,7 @@ public class ProfileSkinController : ControllerBase
             return BadRequest(new MessageResponse("Invalid skin id"));
         }
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Profile skin change attempt with no userId.");
@@ -62,7 +62,7 @@ public class ProfileSkinController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Profile skin fetch attempt with no userId.");

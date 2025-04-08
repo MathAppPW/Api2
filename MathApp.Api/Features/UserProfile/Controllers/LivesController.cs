@@ -31,7 +31,7 @@ public class LivesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> UpdateLives()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Lives update attempt with no userId.");
@@ -74,7 +74,7 @@ public class LivesController : ControllerBase
     [HttpPost("damage")]
     public async Task<IActionResult> Damage()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Lives damage attempt with no userId.");
@@ -105,7 +105,7 @@ public class LivesController : ControllerBase
     [HttpPost("heal")]
     public async Task<IActionResult> Heal()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Lives heal attempt with no userId.");

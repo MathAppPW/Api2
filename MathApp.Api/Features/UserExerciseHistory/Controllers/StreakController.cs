@@ -34,7 +34,7 @@ public class StreakController : ControllerBase
     [HttpGet("longest")]
     public async Task<IActionResult> GetLongest()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Longest streak fetch attempt with no userId.");
@@ -58,7 +58,7 @@ public class StreakController : ControllerBase
     [HttpGet("current")]
     public async Task<IActionResult> GetCurrent()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Current streak fetch attempt with no userId.");
@@ -82,7 +82,7 @@ public class StreakController : ControllerBase
     [HttpGet("callendar")]
     public async Task<IActionResult> GetCallendar()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("All streaks fetch attempt with no userId.");

@@ -39,7 +39,7 @@ public class SearchController : ControllerBase
     [HttpGet("search/{username}")]
     public async Task<IActionResult> SearchShort(string username)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User search attempt with no userId.");
@@ -75,7 +75,7 @@ public class SearchController : ControllerBase
     [HttpGet("search-verbose/{username}")]
     public async Task<IActionResult> SearchVerbose(string username)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User search attempt with no userId.");

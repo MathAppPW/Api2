@@ -240,7 +240,7 @@ public class UserController : ControllerBase
     [HttpGet("email")]
     public async Task<IActionResult> GetEmail()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User email fetch attempt with no userId.");
