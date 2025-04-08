@@ -31,7 +31,7 @@ public class UserProfileController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User profile fetch attempt with no userId.");

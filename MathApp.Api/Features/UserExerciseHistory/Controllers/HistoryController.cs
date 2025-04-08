@@ -38,7 +38,7 @@ public class HistoryController : ControllerBase
     [HttpPost("add")]
     public async Task<IActionResult> Add([FromBody] HistoryEntryDto dto)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User history entry post attempt with no userId.");
@@ -81,7 +81,7 @@ public class HistoryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User history fetch attempt with no userId.");
@@ -115,7 +115,7 @@ public class HistoryController : ControllerBase
     [HttpGet("days")]
     public async Task<IActionResult> GetActivityPerDay()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User time spent fetch attempt with no userId.");
@@ -139,7 +139,7 @@ public class HistoryController : ControllerBase
     [HttpGet("success")]
     public async Task<IActionResult> GetExerciseCountSuccessful()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Exercises count all fetch attempt with no userId.");
@@ -163,7 +163,7 @@ public class HistoryController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> Delete([FromBody] string entryId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("User history delete attempt with no userId.");

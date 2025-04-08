@@ -27,7 +27,7 @@ public class ExerciseController : ControllerBase
     [HttpGet("{seriesId}")]
     public async Task<IActionResult> GetExercises(int seriesId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Exercises fetch attempt with no userId.");
@@ -43,7 +43,7 @@ public class ExerciseController : ControllerBase
     [HttpGet("series/{chapterName}/{subjectName}/{lessonId}")]
     public async Task<IActionResult> GetSeries(string chapterName, string subjectName, int lessonId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Series fetch attempt with no userId.");

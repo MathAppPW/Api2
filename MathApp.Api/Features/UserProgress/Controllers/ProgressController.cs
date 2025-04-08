@@ -34,7 +34,7 @@ public class ProgressController : ControllerBase
     [HttpGet("chapters")]
     public async Task<IActionResult> GetChapters()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Chapters progress fetch attempt with no userId.");
@@ -58,7 +58,7 @@ public class ProgressController : ControllerBase
     [HttpPost("subjects")]
     public async Task<IActionResult> GetSubjects([FromBody] SubjectsProgressDto dto)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Subjects progress fetch attempt with no userId.");
@@ -82,7 +82,7 @@ public class ProgressController : ControllerBase
     [HttpPost("lessons")]
     public async Task<IActionResult> GetLessons([FromBody] LessonsProgressDto dto)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Lessons progress fetch attempt with no userId.");

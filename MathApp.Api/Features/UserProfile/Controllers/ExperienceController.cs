@@ -30,7 +30,7 @@ public class ExperienceController : ControllerBase
     [HttpPost("add")]
     public async Task<IActionResult> Add([FromBody] ExperienceDto dto)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Experience increase attempt with no userId.");
@@ -60,7 +60,7 @@ public class ExperienceController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             _logger.LogInformation("Experience fetch attempt with no userId.");
