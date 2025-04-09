@@ -2,6 +2,7 @@
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -14,15 +15,18 @@ namespace MathAppApi.Features.UserProfile.Controllers;
 [Route("[controller]")]
 public class LivesController : ControllerBase
 {
-    private static readonly int _livesUpdateInterval = 5;
-    private static readonly int _maxLives = 5;
+    public static readonly int _livesUpdateInterval = 5;
+    public static readonly int _maxLives = 5;
     private readonly IUserProfileRepo _userProfileRepo;
+
+    private readonly ILivesService _livesService;
 
     private readonly ILogger<LivesController> _logger;
 
-    public LivesController(IUserProfileRepo userProfileRepo, ILogger<LivesController> logger)
+    public LivesController(IUserProfileRepo userProfileRepo, ILivesService livesService, ILogger<LivesController> logger)
     {
         _userProfileRepo = userProfileRepo;
+        _livesService = livesService;
         _logger = logger;
     }
 
@@ -45,27 +49,12 @@ public class LivesController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        var currentTime = DateTime.UtcNow;
-        var lastUpdate = userProfile.LastLivesUpdate;
-        var timeDifference = currentTime - lastUpdate;
-        var livesToAdd = (int)timeDifference.TotalMinutes / _livesUpdateInterval;
-
-        userProfile.Lives = Math.Min(userProfile.Lives + livesToAdd, _maxLives);
-        if(userProfile.Lives == _maxLives)
-        {
-            userProfile.LastLivesUpdate = currentTime;
-        }
-        else
-        {
-            userProfile.LastLivesUpdate = lastUpdate.AddMinutes(livesToAdd * _livesUpdateInterval);
-        }
-
-        await _userProfileRepo.UpdateAsync(userProfile);
+        await _livesService.UpdateLives(userProfile);
 
         return Ok(new LivesResponse
         {
             Lives = userProfile.Lives,
-            SecondsToHeal = GetSecondsToHeal(userProfile)
+            SecondsToHeal = await _livesService.GetSecondsToHeal(userProfile)
         });
     }
 
@@ -96,7 +85,7 @@ public class LivesController : ControllerBase
         return Ok(new LivesResponse
         {
             Lives = userProfile.Lives,
-            SecondsToHeal = GetSecondsToHeal(userProfile)
+            SecondsToHeal = await _livesService.GetSecondsToHeal(userProfile)
         });
     }
 
@@ -131,21 +120,7 @@ public class LivesController : ControllerBase
         return Ok(new LivesResponse
         {
             Lives = userProfile.Lives,
-            SecondsToHeal = GetSecondsToHeal(userProfile)
+            SecondsToHeal = await _livesService.GetSecondsToHeal(userProfile)
         });
-    }
-
-    public static int GetSecondsToHeal(Models.UserProfile userProfile)
-    {
-        if (userProfile.Lives == _maxLives)
-        {
-            return 0;
-        }
-        else
-        {
-            int timeFromLastUpdate = (int)(DateTime.UtcNow - userProfile.LastLivesUpdate).TotalSeconds;
-            int secondsToHeal = _livesUpdateInterval * 60 - timeFromLastUpdate;
-            return secondsToHeal;
-        }
     }
 }
