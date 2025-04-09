@@ -25,13 +25,16 @@ public class UserController : ControllerBase
     private readonly IEmailService _emailService;
     private readonly IPasswordResetDataStorage _passwordResetDataStorage;
     private readonly ILogger<UserController> _logger;
+    private readonly IEmailChangeDataStorage _emailChangeDataStorage;
 
     private readonly string _frontendUrl;
     private readonly string _resetPasswordEndpoint;
-    
-    public UserController(IPasswordHasher<User> passwordHasher, ITokenService tokenService, IUserRepo userRepo, IUserProfileRepo userProfileRepo,
+
+    public UserController(IPasswordHasher<User> passwordHasher, ITokenService tokenService, IUserRepo userRepo,
+        IUserProfileRepo userProfileRepo,
         IUserDataValidator userDataValidator, ICookieService cookieService, ILogger<UserController> logger,
-        IEmailService emailService, IPasswordResetDataStorage passwordResetDataStorage, IConfiguration config)
+        IEmailService emailService, IPasswordResetDataStorage passwordResetDataStorage,
+        IEmailChangeDataStorage emailChangeDataStorage, IConfiguration config)
     {
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
@@ -171,7 +174,7 @@ public class UserController : ControllerBase
         await _emailService.SendEmail(email, emailContent);
         return Ok();
     }
-
+    
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -210,8 +213,6 @@ public class UserController : ControllerBase
         {
             _logger.LogError("Valid token has no sub value!");
             throw new InvalidOperationException("'sub' value has not been found in auth token");
-            _logger.LogError("User with valid token has not been found in RemoveAccount");
-            return Ok();
         }
 
         var user = await _userRepo.GetAsync(userId);
@@ -232,11 +233,124 @@ public class UserController : ControllerBase
         return Ok();
     }
 
-
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Authorize]
+    [HttpPut("updateMail")]
+    public async Task<IActionResult> UpdateMail([FromBody] UpdateMailDto dto)
+    {
+        var doesEmailExist = await _userRepo.AnyAsync(u => u.Email == dto.NewMail);
+        if (doesEmailExist)
+            return Conflict(new MessageResponse("Email already exists!"));
+        var userId = User.FindFirst("sub")?.Value;
+        if (userId == null)
+            return Unauthorized();
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+        {
+            _logger.LogError("Valid token for non existent user {0} has been sent to UpdateMail", userId);
+            return Unauthorized();
+        }
+
+        var updateId = _emailChangeDataStorage.RegisterEmailUpdate(userId, dto.NewMail);
+        var emailContent = $"Hi {user.Username}, someone have requested a password reset from your email!\n" +
+                           $"If it wasn't you contact us immediately.\n" +
+                           $"To reset your email click the link below: ${_frontendUrl}/{updateId}";
+        await _emailService.SendEmail(dto.NewMail, emailContent);
+        return Ok();
+    }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HttpPost("confirmUpdateMail")]
+    public async Task<IActionResult> EditMail(AcceptMailUpdateDto dto)
+    {
+        var code = dto.Code;
+        var tuple = _emailChangeDataStorage.GetEmailUpdateRequest("code");
+        if (tuple == null)
+            return BadRequest(new MessageResponse("Invalid code"));
+        var (userId, newMail) = tuple.Value;
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+            return BadRequest("User does not exist!");
+        user.Email = newMail;
+        await _userRepo.UpdateAsync(user);
+        return Ok();
+    }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [HttpPut("updateUsername")]
+    [Authorize]
+    public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameDto dto)
+    { 
+        var userId = User.FindFirst("sub")?.Value;
+        if (userId == null)
+        {
+            _logger.LogInformation("User email fetch attempt with no userId.");
+            return Unauthorized();
+        }
+ 
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+        {
+            _logger.LogError($"User with id {userId} not find in email fetch!");
+            return BadRequest();
+        }
+
+        if (await _userRepo.AnyAsync(u => u.Username == dto.NewUsername))
+            return Conflict(new MessageResponse("Username already exists!"));
+
+        if (dto.NewUsername.Length is < 6 or > 64)
+            return BadRequest(new MessageResponse("Invalid username length"));
+
+        user.Username = dto.NewUsername;
+        await _userRepo.UpdateAsync(user);
+        return Ok();
+    }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize]
+    [HttpPut("updatePassword")]
+    public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDto dto)
+    {
+        var userId = User.FindFirst("sub")?.Value;
+        if (userId == null)
+        {
+            _logger.LogInformation("User email fetch attempt with no userId.");
+            return Unauthorized();
+        }
+ 
+        var user = await _userRepo.GetAsync(userId);
+        if (user == null)
+        {
+            _logger.LogError($"User with id {userId} not find in email fetch!");
+            return BadRequest();
+        }
+
+        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.OldPassword);
+        if (result == PasswordVerificationResult.Failed)
+            return Unauthorized();
+        
+        var (isValid, message) = _userDataValidator.IsPasswordValid(dto.NewPassword);
+        if (!isValid)
+            return BadRequest(new MessageResponse(message));
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+        await _userRepo.UpdateAsync(user);
+        return Ok();
+    }
+    
     [ProducesResponseType<EmailResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize]
     [HttpGet("email")]
     public async Task<IActionResult> GetEmail()
     {
@@ -260,8 +374,6 @@ public class UserController : ControllerBase
             Username = user.Username
         });
     }
-
-            
 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
