@@ -15,10 +15,23 @@ public class MathAppDbContext : DbContext
     public DbSet<UserHistoryEntry> UserHistoryEntries { get; set; }
     public DbSet<Friendship> Friendships { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
+    public DbSet<Leaderboard> Leaderboards { get; set; }
 
     public MathAppDbContext(DbContextOptions<MathAppDbContext> options) : base(options)
     {
         if (Database.IsSqlite())
             Database.EnsureCreated();
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Leaderboard>()
+        .OwnsMany(l => l.Entries, entry =>
+        {
+            entry.WithOwner();
+            entry.Property(e => e.Id)
+            .ValueGeneratedOnAdd();
+            entry.HasKey(e => e.Id);
+        });
     }
 }

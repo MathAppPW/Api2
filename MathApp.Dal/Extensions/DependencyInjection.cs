@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<ILessonRepo, LessonRepo>();
         services.AddScoped<IExerciseRepo, ExerciseRepo>();
         services.AddScoped<ISeriesRepo, SeriesRepo>();
+        services.AddScoped<ILeaderboardRepo, LeaderboardRepo>();
     }
 
     public static void AddDbFromEnvironment(this IServiceCollection services, string? dbEnvironment,
