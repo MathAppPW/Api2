@@ -11,6 +11,7 @@ using MathAppApi.Features.UserExerciseHistory.Extensions;
 using MathAppApi.Features.Exercise.Extensions;
 using MathAppApi.Features.UserProgress.Extensions;
 using MathAppApi.Features.Leaderboard.Extensions;
+using MathAppApi.Features.UserProfile.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,7 @@ builder.Services.AddExerciseServices();
 builder.Services.AddProgressServices();
 builder.Services.AddLeaderboardServices();
 builder.Services.AddAuthenticationServices();
+builder.Services.AddProfileServices();
 builder.Services.AddCookieService();
 builder.Services.AddPasswordResetDataStorage();
 builder.Services.UseFakeEmailService();

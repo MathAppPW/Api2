@@ -43,6 +43,7 @@ public class UserController : ControllerBase
         _userDataValidator = userDataValidator;
         _cookieService = cookieService;
         _logger = logger;
+        _emailChangeDataStorage = emailChangeDataStorage;
         _emailService = emailService;
         _passwordResetDataStorage = passwordResetDataStorage;
 

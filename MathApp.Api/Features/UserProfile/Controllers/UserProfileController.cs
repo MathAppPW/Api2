@@ -4,6 +4,7 @@ using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
 using MathAppApi.Features.UserProfile.Extensions;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -18,11 +19,14 @@ public class UserProfileController : ControllerBase
 {
     private readonly IUserProfileRepo _userProfileRepo;
 
+    private readonly ILivesService _livesService;
+
     private readonly ILogger<UserProfileController> _logger;
 
-    public UserProfileController(IUserProfileRepo userProfileRepo, ILogger<UserProfileController> logger)
+    public UserProfileController(IUserProfileRepo userProfileRepo, ILivesService livesService, ILogger<UserProfileController> logger)
     {
         _userProfileRepo = userProfileRepo;
+        _livesService = livesService;
         _logger = logger;
     }
 
@@ -46,6 +50,9 @@ public class UserProfileController : ControllerBase
         }
 
         await _userProfileRepo.LoadMemberAsync(userProfile, u => u.User);
-        return Ok(userProfile.ToDto());
+
+        var response = await userProfile.ToDto(_livesService);
+
+        return Ok(response);
     }
 }
