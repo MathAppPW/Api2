@@ -10,5 +10,6 @@ public static class DependencyInjection
     public static void AddProfileServices(this IServiceCollection services)
     {
         services.AddScoped<ILivesService, LivesService>();
+        services.AddScoped<IAchievementsService, AchievementsService>();
     }
 }

@@ -4,6 +4,7 @@ using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserExerciseHistory.Dtos;
 using MathAppApi.Features.UserExerciseHistory.Extensions;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using MathAppApi.Shared.Utils;
 using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -25,12 +26,15 @@ public class HistoryController : ControllerBase
 
     private readonly IHistoryUtils _utils;
 
-    public HistoryController(IUserProfileRepo userProfileRepo, IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<HistoryController> logger, IHistoryUtils utils)
+    private readonly IAchievementsService _achievementsService;
+
+    public HistoryController(IUserProfileRepo userProfileRepo, IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<HistoryController> logger, IHistoryUtils utils, IAchievementsService achievementsService)
     {
         _userProfileRepo = userProfileRepo;
         _userHistoryEntryRepo = userHistoryEntryRepo;
         _logger = logger;
         _utils = utils;
+        _achievementsService = achievementsService;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -57,6 +61,7 @@ public class HistoryController : ControllerBase
 
         await _userHistoryEntryRepo.AddAsync(historyEntry);
         await _userProfileRepo.UpdateAsync(userProfile);
+        await _achievementsService.UpdateAchievements(userProfile);
 
         return Ok();
     }

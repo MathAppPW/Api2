@@ -14,6 +14,8 @@ public class UserProfile
     [Required] public int RocketSkin { get; set; } = 0;
     [Required] public int ProfileSkin { get; set; } = 0;
     [Required] public List<string> History { get; set; } = [];
-    
+    [Required] public List<bool> AchievementsRocket { get; set; } = new();
+    [Required] public List<bool> AchievementsAvatar { get; set; } = new();
+
     public User? User { get; set; }
 }

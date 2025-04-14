@@ -2,6 +2,7 @@ using Dal;
 using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Friends.Dto;
 using MathAppApi.Features.Friends.Dtos;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using MathAppApi.Shared.Utils.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,9 +21,10 @@ public class FriendsController : ControllerBase
     private readonly IUserProfileRepo _userProfileRepo;
     private readonly IHistoryUtils _historyUtils;
     private readonly ILogger<FriendsController> _logger;
+    private readonly IAchievementsService _achievementsService;
 
     public FriendsController(IUserRepo userRepo, IFriendshipRepo friendshipRepo, IFriendRequestRepo friendRequestRepo,
-        IUserProfileRepo userProfileRepo, IHistoryUtils historyUtils, ILogger<FriendsController> logger)
+        IUserProfileRepo userProfileRepo, IHistoryUtils historyUtils, ILogger<FriendsController> logger, IAchievementsService achievementsService)
     {
         _userRepo = userRepo;
         _historyUtils = historyUtils;
@@ -30,6 +32,7 @@ public class FriendsController : ControllerBase
         _friendRequestRepo = friendRequestRepo;
         _userProfileRepo = userProfileRepo;
         _logger = logger;
+        _achievementsService = achievementsService;
     }
 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -105,6 +108,11 @@ public class FriendsController : ControllerBase
                 UserId2 = request.ReceiverUserId
             };
             await _friendshipRepo.AddAsync(friendship);
+
+            var userProfile = await _userProfileRepo.FindOneAsync(up => up.Id == request.SenderUserId);
+            if (userProfile == null)
+                return NotFound();
+            await _achievementsService.UpdateAchievements(userProfile);
         }
         else
             await _friendRequestRepo.RemoveAsync(request);
