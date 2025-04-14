@@ -3,6 +3,7 @@ using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
 using MathAppApi.Features.UserProfile.Dtos;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -19,10 +20,13 @@ public class ExperienceController : ControllerBase
 
     private readonly ILogger<ExperienceController> _logger;
 
-    public ExperienceController(IUserProfileRepo userProfileRepo, ILogger<ExperienceController> logger)
+    private readonly IAchievementsService _achievementsService;
+
+    public ExperienceController(IUserProfileRepo userProfileRepo, ILogger<ExperienceController> logger, IAchievementsService achievementsService)
     {
         _userProfileRepo = userProfileRepo;
         _logger = logger;
+        _achievementsService = achievementsService;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -48,6 +52,7 @@ public class ExperienceController : ControllerBase
         userProfile.Level = userProfile.Experience / 1000 + 1;
 
         await _userProfileRepo.UpdateAsync(userProfile);
+        await _achievementsService.UpdateAchievements(userProfile);
 
         return Ok(new ExperienceResponse {
             Level = userProfile.Level,
