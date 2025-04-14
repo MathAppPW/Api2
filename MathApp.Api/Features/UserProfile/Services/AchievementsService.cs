@@ -27,24 +27,24 @@ public class AchievementsService : IAchievementsService
 
         for(int i = 0; i < achievementsRocket.Count; i++)
         {
+            while (i >= userProfile.AchievementsRocket.Count)
+            {
+                userProfile.AchievementsRocket.Add(false);
+            }
             if (achievementsRocket[i])
             {
-                while(i >= userProfile.AchievementsRocket.Count)
-                {
-                    userProfile.AchievementsRocket.Add(false);
-                }
                 userProfile.AchievementsRocket[i] = true;
             }
         }
 
         for(int i = 0; i < achievementsAvatar.Count; i++)
         {
+            while (i >= userProfile.AchievementsAvatar.Count)
+            {
+                userProfile.AchievementsAvatar.Add(false);
+            }
             if (achievementsAvatar[i])
             {
-                while (i >= userProfile.AchievementsAvatar.Count)
-                {
-                    userProfile.AchievementsAvatar.Add(false);
-                }
                 userProfile.AchievementsAvatar[i] = true;
             }
         }

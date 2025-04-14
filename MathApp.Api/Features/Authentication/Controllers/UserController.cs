@@ -2,6 +2,7 @@ using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.DataStorages;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.Authentication.Services.Interfaces;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using MathAppApi.Shared.Emails.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +27,7 @@ public class UserController : ControllerBase
     private readonly IPasswordResetDataStorage _passwordResetDataStorage;
     private readonly ILogger<UserController> _logger;
     private readonly IEmailChangeDataStorage _emailChangeDataStorage;
+    private readonly IAchievementsService _achievementsService;
 
     private readonly string _frontendUrl;
     private readonly string _resetPasswordEndpoint;
@@ -34,7 +36,7 @@ public class UserController : ControllerBase
         IUserProfileRepo userProfileRepo,
         IUserDataValidator userDataValidator, ICookieService cookieService, ILogger<UserController> logger,
         IEmailService emailService, IPasswordResetDataStorage passwordResetDataStorage,
-        IEmailChangeDataStorage emailChangeDataStorage, IConfiguration config)
+        IEmailChangeDataStorage emailChangeDataStorage, IConfiguration config, IAchievementsService achievementsService)
     {
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
@@ -46,6 +48,7 @@ public class UserController : ControllerBase
         _emailChangeDataStorage = emailChangeDataStorage;
         _emailService = emailService;
         _passwordResetDataStorage = passwordResetDataStorage;
+        _achievementsService = achievementsService;
 
         _frontendUrl = config["Frontend:FrontendUrl"] ?? "NO_FRONTEND_URL_SET";
         _resetPasswordEndpoint = config["Frontend:ResetPasswordEndpoint"] ?? "NO_RESET_ENDPOINT_PROVIDED";
@@ -112,6 +115,7 @@ public class UserController : ControllerBase
             History = []
         };
         await _userProfileRepo.AddAsync(userProfile);
+        await _achievementsService.UpdateAchievements(userProfile);
 
         var refreshToken = await _tokenService.GetRefreshToken(user);
         var response = await GetTokenResponse(refreshToken);
