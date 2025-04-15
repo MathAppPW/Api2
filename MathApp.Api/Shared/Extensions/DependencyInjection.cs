@@ -10,5 +10,6 @@ public static class DependencyInjection
     public static void AddReposShared(this IServiceCollection services)
     {
         services.AddScoped<IHistoryUtils, HistoryUtils>();
+        services.AddScoped<IFriendsUtils, FriendsUtils>();
     }
 }

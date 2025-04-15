@@ -65,6 +65,72 @@ namespace Dal.Migrations
                     b.ToTable("Exercises");
                 });
 
+            modelBuilder.Entity("Models.FriendRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ReceiverId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReceiverUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SenderId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SenderUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("FriendRequests");
+                });
+
+            modelBuilder.Entity("Models.Friendship", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId1")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId2")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId1");
+
+                    b.HasIndex("UserId2");
+
+                    b.ToTable("Friendships");
+                });
+
+            modelBuilder.Entity("Models.Leaderboard", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Leaderboards");
+                });
+
             modelBuilder.Entity("Models.Lesson", b =>
                 {
                     b.Property<int>("Id")
@@ -73,16 +139,11 @@ namespace Dal.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ChapterName")
-                        .HasColumnType("text");
-
                     b.Property<string>("SubjectName")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ChapterName");
 
                     b.HasIndex("SubjectName");
 
@@ -160,6 +221,9 @@ namespace Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("SeriesId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("Success")
                         .HasColumnType("boolean");
 
@@ -175,6 +239,14 @@ namespace Dal.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
+
+                    b.PrimitiveCollection<List<bool>>("AchievementsAvatar")
+                        .IsRequired()
+                        .HasColumnType("boolean[]");
+
+                    b.PrimitiveCollection<List<bool>>("AchievementsRocket")
+                        .IsRequired()
+                        .HasColumnType("boolean[]");
 
                     b.Property<int>("Experience")
                         .HasColumnType("integer");
@@ -221,12 +293,86 @@ namespace Dal.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Models.FriendRequest", b =>
+                {
+                    b.HasOne("Models.User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId");
+
+                    b.HasOne("Models.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("Models.Friendship", b =>
+                {
+                    b.HasOne("Models.User", "User1")
+                        .WithMany()
+                        .HasForeignKey("UserId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Models.User", "User2")
+                        .WithMany()
+                        .HasForeignKey("UserId2")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User1");
+
+                    b.Navigation("User2");
+                });
+
+            modelBuilder.Entity("Models.Leaderboard", b =>
+                {
+                    b.OwnsMany("Models.LeaderboardEntry", "Entries", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("LeaderboardId")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<int>("Score")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("UserId")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("LeaderboardId");
+
+                            b1.HasIndex("UserId");
+
+                            b1.ToTable("LeaderboardEntry");
+
+                            b1.WithOwner()
+                                .HasForeignKey("LeaderboardId");
+
+                            b1.HasOne("Models.UserProfile", "User")
+                                .WithMany()
+                                .HasForeignKey("UserId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+
+                            b1.Navigation("User");
+                        });
+
+                    b.Navigation("Entries");
+                });
+
             modelBuilder.Entity("Models.Lesson", b =>
                 {
-                    b.HasOne("Models.Chapter", null)
-                        .WithMany("Lessons")
-                        .HasForeignKey("ChapterName");
-
                     b.HasOne("Models.Subject", "Subject")
                         .WithMany("Lessons")
                         .HasForeignKey("SubjectName")
@@ -250,7 +396,7 @@ namespace Dal.Migrations
             modelBuilder.Entity("Models.Subject", b =>
                 {
                     b.HasOne("Models.Chapter", "Chapter")
-                        .WithMany()
+                        .WithMany("Subjects")
                         .HasForeignKey("ChapterName")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -258,9 +404,20 @@ namespace Dal.Migrations
                     b.Navigation("Chapter");
                 });
 
+            modelBuilder.Entity("Models.UserProfile", b =>
+                {
+                    b.HasOne("Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Models.Chapter", b =>
                 {
-                    b.Navigation("Lessons");
+                    b.Navigation("Subjects");
                 });
 
             modelBuilder.Entity("Models.Lesson", b =>

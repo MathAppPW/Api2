@@ -17,7 +17,7 @@ ENV DB_ENVIRONMENT=postgresql
 RUN mkdir -p /app/certs
 COPY certs/us-east-1-bundle.pem /app/certs/us-east-1-bundle.pem
 
-ENV CONNECTION_STRING=Host=database-1.cgd4sa8morcm.us-east-1.rds.amazonaws.com;Database=mathapppw-main;Username=server;Password=supersecurepassword;SslMode=VerifyFull;RootCertificate=/app/certs/us-east-1-bundle.pem;
+ENV CONNECTION_STRING=Server=kosmiczna-matma.postgres.database.azure.com;Database=postgres;Port=5432;User\ Id=kosmiczna_matma;Password=MathAppPw123!
 
 COPY --from=build /app/publish .
 
