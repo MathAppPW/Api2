@@ -34,7 +34,7 @@ public class ProgressService : IProgressService
     {
         var chapters = await _chapterRepo.GetAllAsync();
 
-        var result = new Dictionary<Chapter, ProgressDto>();
+        var result = new Dictionary<string, ProgressDto>();
 
         foreach (var chapter in chapters)
         {
@@ -60,8 +60,9 @@ public class ProgressService : IProgressService
                 }
             }
 
-            var percent = sum / subjectsProgress.Progress.Count;
-            result[chapter] = new ProgressDto
+            var allProgress = subjectsProgress.Progress.Count;
+            var percent = allProgress == 0f ? 0f : sum / allProgress;
+            result[chapter.Name] = new ProgressDto
             {
                 Completed = fullyCompleted,
                 All = subjectsProgress.Progress.Count,
@@ -87,7 +88,7 @@ public class ProgressService : IProgressService
         }
 
         var subjectsList = chapter.Subjects;
-        var result = new Dictionary<Subject, ProgressDto>();
+        var result = new Dictionary<string, ProgressDto>();
 
         foreach (var subject in subjectsList)
         {
@@ -113,8 +114,9 @@ public class ProgressService : IProgressService
                 }
             }
 
-            var percent = sum / lessonsProgress.Progress.Count;
-            result[subject] = new ProgressDto
+            var allProgress = lessonsProgress.Progress.Count;
+            var percent = allProgress == 0f ? 0f : sum / allProgress;
+            result[subject.Name] = new ProgressDto
             {
                 Completed = fullyCompleted,
                 All = lessonsProgress.Progress.Count,
@@ -148,7 +150,7 @@ public class ProgressService : IProgressService
         }
 
         var lessonsList = subject.Lessons;
-        var result = new Dictionary<Lesson, ProgressDto>();
+        var result = new Dictionary<int, ProgressDto>();
 
         foreach (var lesson in lessonsList)
         {
@@ -158,7 +160,7 @@ public class ProgressService : IProgressService
             );
 
             var percent = seriesList.Count > 0 ? completedSeries / seriesList.Count : 0;
-            result[lesson] = new ProgressDto
+            result[lesson.Id] = new ProgressDto
             {
                 Completed = completedSeries,
                 All = seriesList.Count,
