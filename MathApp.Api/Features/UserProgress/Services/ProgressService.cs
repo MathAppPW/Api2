@@ -18,16 +18,20 @@ public class ProgressService : IProgressService
 {
     private readonly IUserHistoryEntryRepo _userHistoryEntryRepo;
     private readonly IChapterRepo _chapterRepo;
+    private readonly ISubjectRepo _subjectRepo;
     private readonly ILessonRepo _lessonRepo;
+    private readonly ISeriesRepo _seriesRepo;
 
     private readonly ILogger<ProgressService> _logger;
 
-    public ProgressService(IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<ProgressService> logger, IChapterRepo chapterRepo, ILessonRepo lessonRepo)
+    public ProgressService(IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<ProgressService> logger, IChapterRepo chapterRepo, ISubjectRepo subjectRepo, ILessonRepo lessonRepo, ISeriesRepo seriesRepo)
     {
         _userHistoryEntryRepo = userHistoryEntryRepo;
         _logger = logger;
         _chapterRepo = chapterRepo;
+        _subjectRepo = subjectRepo;
         _lessonRepo = lessonRepo;
+        _seriesRepo = seriesRepo;
     }
 
     public async Task<ChaptersProgressResponse> GetChaptersProgressAsync(Models.UserProfile userProfile)
@@ -87,6 +91,7 @@ public class ProgressService : IProgressService
             return new SubjectsProgressResponse();
         }
 
+        await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
         var subjectsList = chapter.Subjects;
         var result = new Dictionary<string, ProgressDto>();
 
@@ -140,7 +145,8 @@ public class ProgressService : IProgressService
             _logger.LogWarning($"Chapter with name {chapterName} not found.");
             return new LessonsProgressResponse();
         }
-        
+
+        await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
         var subjectsList = chapter.Subjects;
         var subject = subjectsList.First(s => s.Name == subjectName);
         if (subject == null)
@@ -149,12 +155,20 @@ public class ProgressService : IProgressService
             return new LessonsProgressResponse();
         }
 
+        await _subjectRepo.LoadCollectionAsync(subject, e => e.Lessons);
         var lessonsList = subject.Lessons;
         var result = new Dictionary<int, ProgressDto>();
 
         foreach (var lesson in lessonsList)
         {
+            await _lessonRepo.LoadCollectionAsync(lesson, e => e.Series);
             var seriesList = lesson.Series;
+
+            foreach (var series in seriesList)
+            {
+                await _seriesRepo.LoadCollectionAsync(series, e => e.Exercises);
+            }
+
             var completedSeries = seriesList.Count(series =>
                 series.Exercises.All(e => history.Any(h => h.ExerciseId == e.Id.ToString() && h.SeriesId == series.Id && h.Success))
             );

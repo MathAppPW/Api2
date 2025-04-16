@@ -2,5 +2,5 @@
 
 public class ExerciseResponse
 {
-    public List<Models.Exercise> Exercises { get; set; } = [];
+    public List<SeriesResponseExercise> Exercises { get; set; } = [];
 }
