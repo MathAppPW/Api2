@@ -34,7 +34,7 @@ public class ExerciseControllerTests
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "123")
+            new Claim("sub", "123")
         }, "mock"));
 
         _controller.ControllerContext = new ControllerContext
@@ -48,10 +48,10 @@ public class ExerciseControllerTests
     [Test]
     public async Task GetExercises_ShouldReturnExercisesForGivenSeries()
     {
-        var exercises = new List<Models.Exercise>
+        var exercises = new List<SeriesResponseExercise>
         {
-            new Models.Exercise { Id = 1, Contents = "2+2" },
-            new Models.Exercise { Id = 2, Contents = "3+5" }
+            new SeriesResponseExercise { Id = 1, Contents = "2+2" },
+            new SeriesResponseExercise { Id = 2, Contents = "3+5" }
         };
 
         var response = new ExerciseResponse { Exercises = exercises };
@@ -75,7 +75,7 @@ public class ExerciseControllerTests
     [Test]
     public async Task GetExercises_ShouldReturnEmptyList_WhenNoExercisesInSeries()
     {
-        var response = new ExerciseResponse { Exercises = new List<Models.Exercise>() };
+        var response = new ExerciseResponse { Exercises = new List<SeriesResponseExercise>() };
 
         _exerciseServiceMock.Setup(service => service.GetExercises(3)).ReturnsAsync(response);
 

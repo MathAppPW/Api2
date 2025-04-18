@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Models;
 using MathAppApi.Features.UserExerciseHistory.Extensions;
 using MathAppApi.Shared.Utils.Interfaces;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 
 namespace MathApp.Api.Tests.Features.UserExerciseHistory.Controllers;
 
@@ -22,6 +23,7 @@ public class StreakControllerTests
     private Mock<ILogger<HistoryController>> _historyLoggerMock;
     private Mock<IUserHistoryEntryRepo> _historyRepoMock;
     private Mock<IHistoryUtils> _historyUtilsMock;
+    private Mock<IAchievementsService> _achievementsServiceMock;
     private List<UserHistoryEntry> _historyEntries;
     private StreakController _controller;
     private HistoryController _historyController;
@@ -35,16 +37,17 @@ public class StreakControllerTests
         _historyLoggerMock = new Mock<ILogger<HistoryController>>();
         _historyUtilsMock = new Mock<IHistoryUtils>();
         _historyEntries = new List<UserHistoryEntry>();
+        _achievementsServiceMock = new Mock<IAchievementsService>();
 
         _controller = new StreakController(_userRepoMock.Object, _loggerMock.Object, _historyUtilsMock.Object);
-        _historyController = new HistoryController(_userRepoMock.Object, _historyRepoMock.Object, _historyLoggerMock.Object, _historyUtilsMock.Object);
+        _historyController = new HistoryController(_userRepoMock.Object, _historyRepoMock.Object, _historyLoggerMock.Object, _historyUtilsMock.Object, _achievementsServiceMock.Object);
 
         _historyRepoMock.Setup(repo => repo.AddAsync(It.IsAny<UserHistoryEntry>()))
             .Callback<UserHistoryEntry>(entry => _historyEntries.Add(entry))
             .Returns(Task.CompletedTask);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[] {
-            new Claim(ClaimTypes.NameIdentifier, "123")
+            new Claim("sub", "123")
         }, "mock"));
 
         _controller.ControllerContext = new ControllerContext

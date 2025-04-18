@@ -8,6 +8,7 @@ using Moq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 
 namespace MathApp.Api.Tests.Features.UserProfile.Controllers;
 
@@ -17,6 +18,7 @@ public class ExperienceControllerTests
 {
     private Mock<IUserProfileRepo> _userRepoMock;
     private Mock<ILogger<ExperienceController>> _loggerMock;
+    private Mock<IAchievementsService> _achievementsServiceMock;
     private ExperienceController _controller;
 
     [SetUp]
@@ -24,11 +26,12 @@ public class ExperienceControllerTests
     {
         _userRepoMock = new Mock<IUserProfileRepo>();
         _loggerMock = new Mock<ILogger<ExperienceController>>();
-        _controller = new ExperienceController(_userRepoMock.Object, _loggerMock.Object);
+        _achievementsServiceMock = new Mock<IAchievementsService>();
+        _controller = new ExperienceController(_userRepoMock.Object, _loggerMock.Object, _achievementsServiceMock.Object);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "123")
+            new Claim("sub", "123")
         }, "mock"));
 
         _controller.ControllerContext = new ControllerContext
@@ -36,7 +39,7 @@ public class ExperienceControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
     }
-    /*
+
     [Test]
     public async Task Add_ShouldReturnOk_WhenExperienceAdded()
     {
@@ -52,11 +55,10 @@ public class ExperienceControllerTests
             var okResult = (OkObjectResult)result;
             var response = okResult.Value as ExperienceResponse;
             Assert.That(response, Is.Not.Null);
-            if(response != null)
+            if (response != null)
             {
-                Assert.That(response.Experience, Is.EqualTo(1100));
+                Assert.That(response.Progress, Is.EqualTo(0.1f));
                 Assert.That(response.Level, Is.EqualTo(2));
-                Assert.That(response.LeveledUp, Is.True);
             }
         });
     }
@@ -76,11 +78,10 @@ public class ExperienceControllerTests
             var okResult = (OkObjectResult)result;
             var response = okResult.Value as ExperienceResponse;
             Assert.That(response, Is.Not.Null);
-            if(response != null)
+            if (response != null)
             {
-                Assert.That(response.Experience, Is.EqualTo(990));
+                Assert.That(response.Progress, Is.EqualTo(0.99f));
                 Assert.That(response.Level, Is.EqualTo(1));
-                Assert.That(response.LeveledUp, Is.False);
             }
         });
     }
@@ -119,15 +120,14 @@ public class ExperienceControllerTests
             var okResult = (OkObjectResult)result;
             var response = okResult.Value as ExperienceResponse;
             Assert.That(response, Is.Not.Null);
-            if(response != null)
+            if (response != null)
             {
-                Assert.That(response.Experience, Is.EqualTo(1500));
+                Assert.That(response.Progress, Is.EqualTo(0.5f));
                 Assert.That(response.Level, Is.EqualTo(2));
-                Assert.That(response.LeveledUp, Is.False);
             }
         });
     }
-    */
+
     [Test]
     public async Task Get_ShouldReturnBadRequest_WhenUserNotFound()
     {

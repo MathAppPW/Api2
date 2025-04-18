@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 
 namespace MathApp.Api.Tests.Features.UserProfile.Controllers;
 
@@ -14,6 +15,7 @@ public class LivesControllerTests
 {
     private Mock<IUserProfileRepo> _userRepoMock;
     private Mock<ILogger<LivesController>> _loggerMock;
+    private Mock<ILivesService> _livesServiceMock;
     private LivesController _controller;
 
     [SetUp]
@@ -21,11 +23,12 @@ public class LivesControllerTests
     {
         _userRepoMock = new Mock<IUserProfileRepo>();
         _loggerMock = new Mock<ILogger<LivesController>>();
-        _controller = new LivesController(_userRepoMock.Object, _loggerMock.Object);
+        _livesServiceMock = new Mock<ILivesService>();
+        _controller = new LivesController(_userRepoMock.Object, _livesServiceMock.Object, _loggerMock.Object);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-                new Claim(ClaimTypes.NameIdentifier, "123")
+                new Claim("sub", "123")
             }, "mock"));
 
         _controller.ControllerContext = new ControllerContext
@@ -110,7 +113,7 @@ public class LivesControllerTests
     [Test]
     public async Task Heal_ShouldReturnOk_WhenUserExists()
     {
-        var userProfile = new Models.UserProfile { Id = "123", Lives = 5 };
+        var userProfile = new Models.UserProfile { Id = "123", Lives = 4 };
         _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Models.UserProfile, bool>>>())).ReturnsAsync(userProfile);
         _userRepoMock.Setup(repo => repo.UpdateAsync(It.IsAny<Models.UserProfile>())).Returns(Task.CompletedTask);
 
@@ -120,7 +123,7 @@ public class LivesControllerTests
         var okResult = (OkObjectResult)result;
         var response = okResult.Value as LivesResponse;
         Assert.That(response, Is.Not.Null);
-        Assert.That(response.Lives, Is.EqualTo(6));
+        Assert.That(response.Lives, Is.EqualTo(5));
     }
 
     [Test]
