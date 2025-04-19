@@ -36,7 +36,7 @@ public class ProgressControllerTests
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "123")
+            new Claim("sub", "123")
         }, "mock"));
 
         _controller.ControllerContext = new ControllerContext

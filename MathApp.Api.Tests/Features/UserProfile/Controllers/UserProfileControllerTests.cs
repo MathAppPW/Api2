@@ -11,6 +11,7 @@ using NUnit.Framework;
 using System;
 using System.Linq.Expressions;
 using Models;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 
 namespace MathApp.Api.Tests.Features.UserProfile.Controllers;
 
@@ -19,6 +20,7 @@ public class UserProfileControllerTests
 {
     private Mock<IUserProfileRepo> _userRepoMock;
     private Mock<ILogger<UserProfileController>> _loggerMock;
+    private Mock<ILivesService> _livesServiceMock;
     private UserProfileController _controller;
 
     [SetUp]
@@ -26,10 +28,11 @@ public class UserProfileControllerTests
     {
         _userRepoMock = new Mock<IUserProfileRepo>();
         _loggerMock = new Mock<ILogger<UserProfileController>>();
-        _controller = new UserProfileController(_userRepoMock.Object, _loggerMock.Object);
+        _livesServiceMock = new Mock<ILivesService>();
+        _controller = new UserProfileController(_userRepoMock.Object, _livesServiceMock.Object, _loggerMock.Object);
 
         var user = new ClaimsPrincipal(new ClaimsIdentity([
-            new Claim(ClaimTypes.NameIdentifier, "123")
+            new Claim("sub", "123")
         ], "mock"));
 
         _controller.ControllerContext = new ControllerContext
