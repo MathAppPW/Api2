@@ -1,12 +1,10 @@
-﻿using Dal;
-using MathApp.Dal.Interfaces;
+﻿using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.UserExerciseHistory.Controllers;
 using MathAppApi.Features.UserProgress.Dtos;
 using MathAppApi.Features.UserProgress.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace MathAppApi.Features.UserProgress.Controllers;
 
@@ -55,7 +53,7 @@ public class ProgressController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<SubjectsProgressResponse>(StatusCodes.Status200OK)]
-    [HttpPost("subjects")]
+    [HttpGet("subjects")]
     public async Task<IActionResult> GetSubjects([FromBody] SubjectsProgressDto dto)
     {
         var userId = User.FindFirst("sub")?.Value;
@@ -79,7 +77,7 @@ public class ProgressController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<LessonsProgressResponse>(StatusCodes.Status200OK)]
-    [HttpPost("lessons")]
+    [HttpGet("lessons")]
     public async Task<IActionResult> GetLessons([FromBody] LessonsProgressDto dto)
     {
         var userId = User.FindFirst("sub")?.Value;
@@ -96,7 +94,7 @@ public class ProgressController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        var response = await _progressService.GetLessonsProgressAsync(userProfile, dto.ChapterName, dto.SubjectName);
+        var response = await _progressService.GetLessonsProgressAsync(userProfile, dto.SubjectName);
 
         return Ok(response);
     }
