@@ -76,14 +76,12 @@ public class FriendsController : ControllerBase
             return Unauthorized();
 
         var requests = await _friendRequestRepo.FindAllAsync(fr => fr.ReceiverUserId == userId);
-        foreach (var request in requests)
-            await _friendRequestRepo.LoadMemberAsync(request, r => r.Sender);
         var dtos = requests.Select(r => new FriendRequestDto()
         {
             SenderName = r.Sender!.Username,
             ReceiverName = receiver.Username,
             TimeStamp = r.TimeStamp
-        });
+        }).ToList();
         return Ok(dtos);
     }
 
