@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Dal;
 using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.UserExerciseHistory.Controllers;
@@ -17,29 +18,22 @@ namespace MathAppApi.Features.UserProgress.Services;
 public class ProgressService : IProgressService
 {
     private readonly IUserHistoryEntryRepo _userHistoryEntryRepo;
-    private readonly IChapterRepo _chapterRepo;
-    private readonly ISubjectRepo _subjectRepo;
-    private readonly ILessonRepo _lessonRepo;
-    private readonly ISeriesRepo _seriesRepo;
+    private readonly MathAppDbContext _db;
 
     private readonly ILogger<ProgressService> _logger;
 
-    public ProgressService(IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<ProgressService> logger, IChapterRepo chapterRepo, ISubjectRepo subjectRepo, ILessonRepo lessonRepo, ISeriesRepo seriesRepo)
+    public ProgressService(IUserHistoryEntryRepo userHistoryEntryRepo, ILogger<ProgressService> logger,
+        MathAppDbContext db)
     {
         _userHistoryEntryRepo = userHistoryEntryRepo;
         _logger = logger;
-        _chapterRepo = chapterRepo;
-        _subjectRepo = subjectRepo;
-        _lessonRepo = lessonRepo;
-        _seriesRepo = seriesRepo;
+        _db = db;
     }
 
-    public async Task<ChaptersProgressResponse> GetChaptersProgressAsync(Models.UserProfile userProfile)
+    public async Task<ChaptersProgressResponse?> GetChaptersProgressAsync(Models.UserProfile userProfile)
     {
-        var chapters = await _chapterRepo.GetAllAsync();
-
+        var chapters = await _db.Chapters.ToListAsync();
         var result = new Dictionary<string, ProgressDto>();
-
         foreach (var chapter in chapters)
         {
             var subjectsProgress = await GetSubjectsProgressAsync(userProfile, chapter.Name);
@@ -55,14 +49,8 @@ public class ProgressService : IProgressService
                 sum += progress.Value.ExercisesCompletedPercent;
             }
 
-            var fullyCompleted = 0;
-            foreach (var progress in subjectsProgress.Progress)
-            {
-                if(progress.Value.ExercisesCompletedPercent == 1f)
-                {
-                    fullyCompleted++;
-                }
-            }
+            var fullyCompleted = subjectsProgress.Progress
+                .Count(progress => progress.Value.ExercisesCompletedPercent == 1f);
 
             var allProgress = subjectsProgress.Progress.Count;
             var percent = allProgress == 0f ? 0f : sum / allProgress;
@@ -80,44 +68,31 @@ public class ProgressService : IProgressService
         };
     }
 
-    public async Task<SubjectsProgressResponse> GetSubjectsProgressAsync(Models.UserProfile userProfile, string chapterName)
+    public async Task<SubjectsProgressResponse?> GetSubjectsProgressAsync(Models.UserProfile userProfile, string chapterName)
     {
-        var history = await GetUserHistory(userProfile);
-
-        var chapter = await _chapterRepo.FindOneAsync(e => e.Name == chapterName);
+        var chapter = await _db.Chapters
+            .Include(c => c.Subjects)
+            .ThenInclude(s => s.Lessons)
+            .ThenInclude(l => l.Series)
+            .ThenInclude(e => e.Exercises)
+            .FirstOrDefaultAsync(c => c.Name == chapterName);
         if (chapter == null)
         {
             _logger.LogWarning($"Chapter with name {chapterName} not found.");
             return new SubjectsProgressResponse();
         }
 
-        await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
         var subjectsList = chapter.Subjects;
         var result = new Dictionary<string, ProgressDto>();
 
         foreach (var subject in subjectsList)
         {
-            var lessonsProgress = await GetLessonsProgressAsync(userProfile, chapter.Name, subject.Name);
-            if (lessonsProgress == null)
-            {
-                _logger.LogWarning($"Couldn't fetch progress for subject {subject.Name}.");
-                return new SubjectsProgressResponse();
-            }
-
+            var lessonsProgress = await GetLessonsProgressAsync(userProfile, subject);
             var sum = 0f;
-            foreach (var progress in lessonsProgress.Progress)
-            {
+            foreach (var progress in lessonsProgress!.Progress)
                 sum += progress.Value.ExercisesCompletedPercent;
-            }
 
-            var fullyCompleted = 0;
-            foreach (var progress in lessonsProgress.Progress)
-            {
-                if(progress.Value.ExercisesCompletedPercent == 1f)
-                {
-                    fullyCompleted++;
-                }
-            }
+            var fullyCompleted = lessonsProgress.Progress.Count(progress => progress.Value.ExercisesCompletedPercent == 1);
 
             var allProgress = lessonsProgress.Progress.Count;
             var percent = allProgress == 0f ? 0f : sum / allProgress;
@@ -135,40 +110,25 @@ public class ProgressService : IProgressService
         };
     }
 
-    public async Task<LessonsProgressResponse> GetLessonsProgressAsync(Models.UserProfile userProfile, string chapterName, string subjectName)
+    public async Task<LessonsProgressResponse?> GetLessonsProgressAsync(Models.UserProfile userProfile,
+        string subjectName)
+    {
+        var subject = await _db.Subjects.Include(s => s.Lessons).ThenInclude(l => l.Series).ThenInclude(s => s.Exercises)
+            .FirstOrDefaultAsync(s => s.Name == subjectName);
+        if (subject == null)
+            return null;
+        return await GetLessonsProgressAsync(userProfile, subject);
+    }
+
+    private async Task<LessonsProgressResponse?> GetLessonsProgressAsync(Models.UserProfile userProfile, Subject subject)
     {
         var history = await GetUserHistory(userProfile);
-
-        var chapter = await _chapterRepo.FindOneAsync(e => e.Name == chapterName);
-        if (chapter == null)
-        {
-            _logger.LogWarning($"Chapter with name {chapterName} not found.");
-            return new LessonsProgressResponse();
-        }
-
-        await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
-        var subjectsList = chapter.Subjects;
-        var subject = subjectsList.First(s => s.Name == subjectName);
-        if (subject == null)
-        {
-            _logger.LogWarning($"Subject with name {subjectName} not found.");
-            return new LessonsProgressResponse();
-        }
-
-        await _subjectRepo.LoadCollectionAsync(subject, e => e.Lessons);
         var lessonsList = subject.Lessons;
         var result = new Dictionary<int, ProgressDto>();
 
         foreach (var lesson in lessonsList)
         {
-            await _lessonRepo.LoadCollectionAsync(lesson, e => e.Series);
             var seriesList = lesson.Series;
-
-            foreach (var series in seriesList)
-            {
-                await _seriesRepo.LoadCollectionAsync(series, e => e.Exercises);
-            }
-
             var completedSeries = seriesList.Count(series =>
                 series.Exercises.All(e => history.Any(h => h.ExerciseId == e.Id.ToString() && h.SeriesId == series.Id && h.Success))
             );
