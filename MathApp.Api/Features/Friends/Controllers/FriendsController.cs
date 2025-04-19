@@ -37,8 +37,8 @@ public class FriendsController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [HttpPost("new")]
-    public async Task<IActionResult> SendFriendRequest([FromBody] string friendUsername)
+    [HttpPost("new/{friendUsername}")]
+    public async Task<IActionResult> SendFriendRequest([FromRoute] string friendUsername)
     {
         var senderId = User.FindFirst("sub")?.Value;
         if (senderId == null)
