@@ -22,8 +22,8 @@ public class AchievementsService : IAchievementsService
 
     public async Task UpdateAchievements(Models.UserProfile userProfile)
     {
-        var achievementsRocket = await GetRocketAchievements(userProfile);
-        var achievementsAvatar = await GetAvatarAchievements(userProfile);
+        var achievementsRocket = await GetUnlockedRockets(userProfile);
+        var achievementsAvatar = await GetUnlockedAvatars(userProfile);
 
         for(int i = 0; i < achievementsRocket.Count; i++)
         {
@@ -52,9 +52,11 @@ public class AchievementsService : IAchievementsService
         await _userProfileRepo.UpdateAsync(userProfile);
     }
 
-    private async Task<List<bool>> GetRocketAchievements(Models.UserProfile userProfile)
+    private async Task<List<bool>> GetUnlockedRockets(Models.UserProfile userProfile)
     {
         var achievementsList = new List<bool>();
+
+        achievementsList.Add(true);
 
         achievementsList.Add(userProfile.Level >= 30);
 
@@ -70,9 +72,12 @@ public class AchievementsService : IAchievementsService
         return achievementsList;
     }
 
-    private async Task<List<bool>> GetAvatarAchievements(Models.UserProfile userProfile)
+    private async Task<List<bool>> GetUnlockedAvatars(Models.UserProfile userProfile)
     {
         var achievementsList = new List<bool>();
+
+        achievementsList.Add(true);
+        achievementsList.Add(true);
 
         achievementsList.Add(userProfile.Level >= 10);
         achievementsList.Add(userProfile.Level >= 40);
@@ -88,7 +93,7 @@ public class AchievementsService : IAchievementsService
         achievementsList.Add(longestStreak.Streak >= 100);
         achievementsList.Add(longestStreak.Streak >= 500);
 
-        //TODO LEADERBOARD TOP 3
+        achievementsList.Add(false);//TODO leaderboard top 3
 
         return achievementsList;
     }
