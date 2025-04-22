@@ -74,7 +74,7 @@ public class ProgressController : ControllerBase
 
         return Ok(response);
     }
-
+    
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<LessonsProgressResponse>(StatusCodes.Status200OK)]
     [HttpGet("lessons")]

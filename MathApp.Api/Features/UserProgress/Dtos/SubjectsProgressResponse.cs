@@ -2,5 +2,12 @@
 
 public class SubjectsProgressResponse
 {
-    public Dictionary<string, ProgressDto> Progress { get; set; } = [];
+    public Dictionary<string, SubjectsProgressResponseEntry> Progress { get; set; } = [];
+}
+
+public class SubjectsProgressResponseEntry
+{
+    public int CurrentLesson { get; set; } = 1;
+    public int SeriesCompleted { get; set; } = 0;
+    public int SeriesAll { get; set; } = 0;
 }
