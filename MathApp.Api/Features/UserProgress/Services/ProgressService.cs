@@ -38,7 +38,7 @@ public class ProgressService : IProgressService
     {
         var chapters = await _chapterRepo.GetAllAsync();
 
-        var result = new Dictionary<string, ProgressDto>();
+        var result = new Dictionary<string, ChapterProgressResponseEntry>();
 
         foreach (var chapter in chapters)
         {
@@ -49,28 +49,19 @@ public class ProgressService : IProgressService
                 return new ChaptersProgressResponse();
             }
 
-            var sum = 0f;
+            var subjectsCompleted = 0;
             foreach (var progress in subjectsProgress.Progress)
             {
-                sum += progress.Value.ExercisesCompletedPercent;
-            }
-
-            var fullyCompleted = 0;
-            foreach (var progress in subjectsProgress.Progress)
-            {
-                if(progress.Value.ExercisesCompletedPercent == 1f)
+                if(progress.Value.CurrentLesson > 6)
                 {
-                    fullyCompleted++;
+                    subjectsCompleted++;
                 }
             }
 
-            var allProgress = subjectsProgress.Progress.Count;
-            var percent = allProgress == 0f ? 0f : sum / allProgress;
-            result[chapter.Name] = new ProgressDto
+            result[chapter.Name] = new ChapterProgressResponseEntry
             {
-                Completed = fullyCompleted,
-                All = subjectsProgress.Progress.Count,
-                ExercisesCompletedPercent = percent
+                SubjectsCompleted = subjectsCompleted,
+                SubjectsAll = subjectsProgress.Progress.Count,
             };
         }
 
@@ -93,96 +84,52 @@ public class ProgressService : IProgressService
 
         await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
         var subjectsList = chapter.Subjects;
-        var result = new Dictionary<string, ProgressDto>();
+        var result = new Dictionary<string, SubjectsProgressResponseEntry>();
 
         foreach (var subject in subjectsList)
         {
-            var lessonsProgress = await GetLessonsProgressAsync(userProfile, chapter.Name, subject.Name);
-            if (lessonsProgress == null)
-            {
-                _logger.LogWarning($"Couldn't fetch progress for subject {subject.Name}.");
-                return new SubjectsProgressResponse();
-            }
+            await _subjectRepo.LoadCollectionAsync(subject, e => e.Lessons);
 
-            var sum = 0f;
-            foreach (var progress in lessonsProgress.Progress)
-            {
-                sum += progress.Value.ExercisesCompletedPercent;
-            }
+            var currentLesson = 1;//TODO - jesli dodamy wstep teoretyczny to uwzglednic 0
+            var seriesCompleted = 0;
+            var seriesAll = 0;
 
-            var fullyCompleted = 0;
-            foreach (var progress in lessonsProgress.Progress)
+            foreach(var lesson in subject.Lessons)
             {
-                if(progress.Value.ExercisesCompletedPercent == 1f)
+                await _lessonRepo.LoadCollectionAsync(lesson, e => e.Series);
+                foreach (var series in lesson.Series)
                 {
-                    fullyCompleted++;
+                    await _seriesRepo.LoadCollectionAsync(series, e => e.Exercises);
+                }
+
+                var completed = lesson.Series.Count(series =>
+                    series.Exercises.All(e => history.Any(h => h.ExerciseId == e.Id.ToString() && h.SeriesId == series.Id && h.Success))
+                );
+
+                if (lesson.Series.Count > 0)
+                {
+                    if (completed == lesson.Series.Count)
+                    {
+                        currentLesson++;
+                    }
+                    else
+                    {
+                        seriesCompleted = completed;
+                        seriesAll = lesson.Series.Count;
+                        break;
+                    }
                 }
             }
 
-            var allProgress = lessonsProgress.Progress.Count;
-            var percent = allProgress == 0f ? 0f : sum / allProgress;
-            result[subject.Name] = new ProgressDto
+            result[subject.Name] = new SubjectsProgressResponseEntry
             {
-                Completed = fullyCompleted,
-                All = lessonsProgress.Progress.Count,
-                ExercisesCompletedPercent = percent
+                CurrentLesson = currentLesson,
+                SeriesCompleted = seriesCompleted,
+                SeriesAll = seriesAll
             };
         }
 
         return new SubjectsProgressResponse
-        {
-            Progress = result
-        };
-    }
-
-    public async Task<LessonsProgressResponse> GetLessonsProgressAsync(Models.UserProfile userProfile, string chapterName, string subjectName)
-    {
-        var history = await GetUserHistory(userProfile);
-
-        var chapter = await _chapterRepo.FindOneAsync(e => e.Name == chapterName);
-        if (chapter == null)
-        {
-            _logger.LogWarning($"Chapter with name {chapterName} not found.");
-            return new LessonsProgressResponse();
-        }
-
-        await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
-        var subjectsList = chapter.Subjects;
-        var subject = subjectsList.First(s => s.Name == subjectName);
-        if (subject == null)
-        {
-            _logger.LogWarning($"Subject with name {subjectName} not found.");
-            return new LessonsProgressResponse();
-        }
-
-        await _subjectRepo.LoadCollectionAsync(subject, e => e.Lessons);
-        var lessonsList = subject.Lessons;
-        var result = new Dictionary<int, ProgressDto>();
-
-        foreach (var lesson in lessonsList)
-        {
-            await _lessonRepo.LoadCollectionAsync(lesson, e => e.Series);
-            var seriesList = lesson.Series;
-
-            foreach (var series in seriesList)
-            {
-                await _seriesRepo.LoadCollectionAsync(series, e => e.Exercises);
-            }
-
-            var completedSeries = seriesList.Count(series =>
-                series.Exercises.All(e => history.Any(h => h.ExerciseId == e.Id.ToString() && h.SeriesId == series.Id && h.Success))
-            );
-
-            var percent = seriesList.Count > 0 ? completedSeries / seriesList.Count : 0;
-            result[lesson.Id] = new ProgressDto
-            {
-                Completed = completedSeries,
-                All = seriesList.Count,
-                ExercisesCompletedPercent = percent
-            };
-        }
-
-        return new LessonsProgressResponse
         {
             Progress = result
         };
