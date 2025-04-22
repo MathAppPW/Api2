@@ -37,8 +37,8 @@ public class FriendsController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [HttpPost("new")]
-    public async Task<IActionResult> SendFriendRequest([FromBody] string friendUsername)
+    [HttpPost("new/{friendUsername}")]
+    public async Task<IActionResult> SendFriendRequest([FromRoute] string friendUsername)
     {
         var senderId = User.FindFirst("sub")?.Value;
         if (senderId == null)
@@ -76,14 +76,12 @@ public class FriendsController : ControllerBase
             return Unauthorized();
 
         var requests = await _friendRequestRepo.FindAllAsync(fr => fr.ReceiverUserId == userId);
-        foreach (var request in requests)
-            await _friendRequestRepo.LoadMemberAsync(request, r => r.Sender);
         var dtos = requests.Select(r => new FriendRequestDto()
         {
             SenderName = r.Sender!.Username,
             ReceiverName = receiver.Username,
             TimeStamp = r.TimeStamp
-        });
+        }).ToList();
         return Ok(dtos);
     }
 

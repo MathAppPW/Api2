@@ -94,7 +94,7 @@ public class ProgressControllerTests
     {
         var userProfile = new Models.UserProfile { Id = "123" };
         _userRepoMock.Setup(repo => repo.FindOneAsync(It.IsAny<Expression<Func<Models.UserProfile, bool>>>())).ReturnsAsync(userProfile);
-        _progressServiceMock.Setup(service => service.GetLessonsProgressAsync(userProfile, "chapter", "subject")).ReturnsAsync(new LessonsProgressResponse());
+        _progressServiceMock.Setup(service => service.GetLessonsProgressAsync(userProfile, "subject")).ReturnsAsync(new LessonsProgressResponse());
 
         var result = await _controller.GetLessons(new LessonsProgressDto { ChapterName = "chapter", SubjectName = "subject" });
 

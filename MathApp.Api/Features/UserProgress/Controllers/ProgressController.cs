@@ -1,12 +1,10 @@
-﻿using Dal;
-using MathApp.Dal.Interfaces;
+﻿using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.UserExerciseHistory.Controllers;
 using MathAppApi.Features.UserProgress.Dtos;
 using MathAppApi.Features.UserProgress.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace MathAppApi.Features.UserProgress.Controllers;
 
@@ -55,7 +53,7 @@ public class ProgressController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<SubjectsProgressResponse>(StatusCodes.Status200OK)]
-    [HttpPost("subjects")]
+    [HttpGet("subjects")]
     public async Task<IActionResult> GetSubjects([FromBody] SubjectsProgressDto dto)
     {
         var userId = User.FindFirst("sub")?.Value;
@@ -73,6 +71,30 @@ public class ProgressController : ControllerBase
         }
 
         var response = await _progressService.GetSubjectsProgressAsync(userProfile, dto.ChapterName);
+
+        return Ok(response);
+    }
+    
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<LessonsProgressResponse>(StatusCodes.Status200OK)]
+    [HttpGet("lessons")]
+    public async Task<IActionResult> GetLessons([FromBody] LessonsProgressDto dto)
+    {
+        var userId = User.FindFirst("sub")?.Value;
+        if (userId == null)
+        {
+            _logger.LogInformation("Lessons progress fetch attempt with no userId.");
+            return Unauthorized();
+        }
+
+        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
+        if (userProfile == null)
+        {
+            _logger.LogWarning("User not found during lessons progress fetch attempt.");
+            return BadRequest(new MessageResponse("User not found"));
+        }
+
+        var response = await _progressService.GetLessonsProgressAsync(userProfile, dto.SubjectName);
 
         return Ok(response);
     }
