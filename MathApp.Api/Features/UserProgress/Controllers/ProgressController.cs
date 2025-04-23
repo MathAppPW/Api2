@@ -74,28 +74,4 @@ public class ProgressController : ControllerBase
 
         return Ok(response);
     }
-    
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<LessonsProgressResponse>(StatusCodes.Status200OK)]
-    [HttpGet("lessons")]
-    public async Task<IActionResult> GetLessons([FromBody] LessonsProgressDto dto)
-    {
-        var userId = User.FindFirst("sub")?.Value;
-        if (userId == null)
-        {
-            _logger.LogInformation("Lessons progress fetch attempt with no userId.");
-            return Unauthorized();
-        }
-
-        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == userId);
-        if (userProfile == null)
-        {
-            _logger.LogWarning("User not found during lessons progress fetch attempt.");
-            return BadRequest(new MessageResponse("User not found"));
-        }
-
-        var response = await _progressService.GetLessonsProgressAsync(userProfile, dto.SubjectName);
-
-        return Ok(response);
-    }
 }
