@@ -60,4 +60,25 @@ public class ExerciseController : ControllerBase
 
         return Ok(response);
     }
+
+    [ProducesResponseType<TheoryResponse>(StatusCodes.Status200OK)]
+    [HttpGet("theory/{chapterName}/{subjectName}")]
+    public async Task<IActionResult> GetTheory(string chapterName, string subjectName)
+    {
+        var userId = User.FindFirst("sub")?.Value;
+        if (userId == null)
+        {
+            _logger.LogInformation("Series fetch attempt with no userId.");
+            return Unauthorized();
+        }
+
+        var dto = new TheoryDto
+        {
+            ChapterName = chapterName,
+            SubjectName = subjectName
+        };
+        var response = await _exerciseService.GetTheory(dto);
+
+        return Ok(response);
+    }
 }

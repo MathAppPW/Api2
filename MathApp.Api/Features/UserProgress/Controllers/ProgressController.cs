@@ -53,8 +53,8 @@ public class ProgressController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<SubjectsProgressResponse>(StatusCodes.Status200OK)]
-    [HttpGet("subjects")]
-    public async Task<IActionResult> GetSubjects([FromBody] SubjectsProgressDto dto)
+    [HttpGet("subjects/{chapterName}")]
+    public async Task<IActionResult> GetSubjects(string chapterName)
     {
         var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
@@ -70,7 +70,7 @@ public class ProgressController : ControllerBase
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        var response = await _progressService.GetSubjectsProgressAsync(userProfile, dto.ChapterName);
+        var response = await _progressService.GetSubjectsProgressAsync(userProfile, chapterName);
 
         return Ok(response);
     }
