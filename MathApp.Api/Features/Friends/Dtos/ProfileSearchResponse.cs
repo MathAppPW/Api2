@@ -18,4 +18,6 @@ public class ProfileSearchResponse
     public int ExercisesCompleted { get; set; } = 0;
     [Required]
     public bool IsFriend { get; set; } = false;
+    [Required]
+    public bool FriendRequestSent { get; set; } = false;
 }

@@ -20,16 +20,18 @@ public class SearchController : ControllerBase
     private readonly IUserProfileRepo _userProfileRepo;
     private readonly IUserRepo _userRepo;
     private readonly IFriendshipRepo _friendshipRepo;
+    private readonly IFriendRequestRepo _friendRequestRepo;
 
     private readonly ILogger<SearchController> _logger;
 
     private readonly IHistoryUtils _utils;
 
-    public SearchController(IUserProfileRepo userProfileRepo, IUserRepo userRepo, IFriendshipRepo friendshipRepo, ILogger<SearchController> logger, IHistoryUtils historyUtils)
+    public SearchController(IUserProfileRepo userProfileRepo, IUserRepo userRepo, IFriendshipRepo friendshipRepo, IFriendRequestRepo friendRequestRepo, ILogger<SearchController> logger, IHistoryUtils historyUtils)
     {
         _userProfileRepo = userProfileRepo;
         _userRepo = userRepo;
         _friendshipRepo = friendshipRepo;
+        _friendRequestRepo = friendRequestRepo;
         _logger = logger;
         _utils = historyUtils;
     }
@@ -75,36 +77,36 @@ public class SearchController : ControllerBase
     [HttpGet("search-verbose/{username}")]
     public async Task<IActionResult> SearchVerbose(string username)
     {
-        var userId = User.FindFirst("sub")?.Value;
-        if (userId == null)
+        var myUserId = User.FindFirst("sub")?.Value;
+        if (myUserId == null)
         {
             _logger.LogInformation("User search attempt with no userId.");
             return Unauthorized();
         }
 
-        var user = await _userRepo.FindOneAsync(u => u.Username == username);
-        if (user == null)
+        var searchedUser = await _userRepo.FindOneAsync(u => u.Username == username);
+        if (searchedUser == null)
         {
             _logger.LogInformation("User not found during user search attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
 
-        var userProfile = await _userProfileRepo.FindOneAsync(u => u.Id == user.Id);
-        if (userProfile == null)
+        var searchedUserProfile = await _userProfileRepo.FindOneAsync(u => u.Id == searchedUser.Id);
+        if (searchedUserProfile == null)
         {
             _logger.LogInformation("User profile not found during user search attempt.");
             return BadRequest(new MessageResponse("User profile not found"));
         }
 
-        var longestStreak = await _utils.GetLongestStreak(userProfile);
-        var exercisesCompleted = await _utils.GetExercisesCountSuccessful(userProfile);
+        var longestStreak = await _utils.GetLongestStreak(searchedUserProfile);
+        var exercisesCompleted = await _utils.GetExercisesCountSuccessful(searchedUserProfile);
 
         var friendUser = await _userRepo.FindOneAsync(u => u.Username == username);
         if (friendUser == null)
             return NotFound();
 
         var friendship = await _friendshipRepo.FindOneAsync(fr =>
-            fr.UserId1 == userId && fr.UserId2 == friendUser.Id || fr.UserId1 == friendUser.Id && fr.UserId2 == userId);
+            fr.UserId1 == myUserId && fr.UserId2 == friendUser.Id || fr.UserId1 == friendUser.Id && fr.UserId2 == myUserId);
 
         var isFriend = false;
         if(friendship != null)
@@ -112,15 +114,24 @@ public class SearchController : ControllerBase
             isFriend = true;
         }
 
+        var request = await _friendRequestRepo.FindOneAsync(request => request.ReceiverUserId == searchedUser.Id && request.SenderUserId == myUserId);
+
+        var friendRequestSent = false;
+        if (request != null)
+        {
+            friendRequestSent = true;
+        }
+
         return Ok(new ProfileSearchResponse
         {
-            Level = userProfile.Level,
-            ProfileSkin = userProfile.ProfileSkin,
-            RocketSkin = userProfile.RocketSkin,
-            Streak = userProfile.Streak,
+            Level = searchedUserProfile.Level,
+            ProfileSkin = searchedUserProfile.ProfileSkin,
+            RocketSkin = searchedUserProfile.RocketSkin,
+            Streak = searchedUserProfile.Streak,
             MaxStreak = longestStreak.Streak,
             ExercisesCompleted = exercisesCompleted,
-            IsFriend = isFriend
+            IsFriend = isFriend,
+            FriendRequestSent = friendRequestSent
         });
     }
 }
