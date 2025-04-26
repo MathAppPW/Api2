@@ -28,7 +28,7 @@ public class ExerciseService : IExerciseService
         var series = await _seriesRepo.FindOneAsync(e => e.Id == seriesId);
         if (series == null)
         {
-            _logger.LogWarning("Series not found during exercises fetch attempt.");
+            _logger.LogWarning("Series not found during exercises fetch attempt in GetExercises(int)");
             return new ExerciseResponse();
         }
 
@@ -42,7 +42,7 @@ public class ExerciseService : IExerciseService
         var chapter = await _chapterRepo.FindOneAsync(e => e.Name == dto.ChapterName);
         if (chapter == null)
         {
-            _logger.LogWarning("Series not found during exercises fetch attempt.");
+            _logger.LogWarning("Chapter not found during exercises fetch attempt.");
             return new SeriesResponse();
         }
 
@@ -66,5 +66,35 @@ public class ExerciseService : IExerciseService
 
         var response = await lesson.Series.ToDto(_seriesRepo);
         return response;
+    }
+
+    public async Task<TheoryResponse> GetTheory(TheoryDto dto)
+    {
+        var chapter = await _chapterRepo.FindOneAsync(e => e.Name == dto.ChapterName);
+        if (chapter == null)
+        {
+            _logger.LogWarning("Chapter not found during theory fetch attempt.");
+            return new TheoryResponse();
+        }
+
+        await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
+        var subject = chapter.Subjects.First(e => e.Name == dto.SubjectName);
+        if (subject == null)
+        {
+            _logger.LogWarning("Subject not found during theory fetch attempt.");
+            return new TheoryResponse();
+        }
+
+        await _subjectRepo.LoadMemberAsync(subject, e => e.Theory);
+        if (subject.Theory == null)
+        {
+            _logger.LogWarning("Theory not found during theory fetch attempt.");
+            return new TheoryResponse();
+        }
+
+        return new TheoryResponse()
+        {
+            Content = subject.Theory.Content
+        };
     }
 }

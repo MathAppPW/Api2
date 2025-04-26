@@ -16,6 +16,7 @@ public class MathAppDbContext : DbContext
     public DbSet<Friendship> Friendships { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<Leaderboard> Leaderboards { get; set; }
+    public DbSet<Theory> Theories { get; set; }
 
     public MathAppDbContext(DbContextOptions<MathAppDbContext> options) : base(options)
     {

@@ -11,5 +11,6 @@ public class Subject
     [ForeignKey(nameof(Chapter))] public string ChapterName { get; set; } = "";
     
     public Chapter? Chapter { get; set; }
+    public Theory? Theory { get; set; }
     public ICollection<Lesson> Lessons { get; set; } = [];
 }

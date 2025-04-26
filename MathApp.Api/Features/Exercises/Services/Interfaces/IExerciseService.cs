@@ -6,4 +6,5 @@ public interface IExerciseService
 {
     Task<ExerciseResponse> GetExercises(int seriesId);
     Task<SeriesResponse> GetSeries(SeriesDto dto);
+    Task<TheoryResponse> GetTheory(TheoryDto dto);
 }

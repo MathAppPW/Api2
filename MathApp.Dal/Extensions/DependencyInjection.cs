@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IExerciseRepo, ExerciseRepo>();
         services.AddScoped<ISeriesRepo, SeriesRepo>();
         services.AddScoped<ILeaderboardRepo, LeaderboardRepo>();
+        services.AddScoped<ITheoryRepo, TheoryRepo>();
     }
 
     public static void AddDbFromEnvironment(this IServiceCollection services, string? dbEnvironment,
