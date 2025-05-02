@@ -57,7 +57,7 @@ public class FriendsController : ControllerBase
         {
             ReceiverUserId = receiver.Id,
             SenderUserId = sender.Id,
-            TimeStamp = DateTime.UtcNow
+            TimeStamp = DateTime.UtcNow,
         };
         await _friendRequestRepo.AddAsync(request);
         return Ok();
@@ -76,12 +76,21 @@ public class FriendsController : ControllerBase
             return Unauthorized();
 
         var requests = await _friendRequestRepo.FindAllAsync(fr => fr.ReceiverUserId == userId);
-        var dtos = requests.Select(r => new FriendRequestDto()
+
+        var dtoTasks = requests.Select(async r =>
         {
-            SenderName = r.Sender!.Username,
-            ReceiverName = receiver.Username,
-            TimeStamp = r.TimeStamp
-        }).ToList();
+            var profile = await _userProfileRepo.FindOneAsync(u => u.User!.Id == r.SenderUserId);
+            return new FriendRequestDto
+            {
+                SenderName = r.Sender!.Username,
+                ReceiverName = receiver.Username,
+                TimeStamp = r.TimeStamp,
+                Id = r.Id,
+                AvatarSkinId = profile!.ProfileSkin
+            };
+        });
+        var dtos = await Task.WhenAll(dtoTasks);
+
         return Ok(dtos);
     }
 
