@@ -77,19 +77,19 @@ public class FriendsController : ControllerBase
 
         var requests = await _friendRequestRepo.FindAllAsync(fr => fr.ReceiverUserId == userId);
 
-        var dtoTasks = requests.Select(async r =>
+        var dtos = new List<FriendRequestDto>();
+        foreach (var r in requests)
         {
             var profile = await _userProfileRepo.FindOneAsync(u => u.User!.Id == r.SenderUserId);
-            return new FriendRequestDto
+            dtos.Add(new FriendRequestDto
             {
                 SenderName = r.Sender!.Username,
                 ReceiverName = receiver.Username,
                 TimeStamp = r.TimeStamp,
                 Id = r.Id,
                 AvatarSkinId = profile!.ProfileSkin
-            };
-        });
-        var dtos = await Task.WhenAll(dtoTasks);
+            });
+        }
 
         return Ok(dtos);
     }
