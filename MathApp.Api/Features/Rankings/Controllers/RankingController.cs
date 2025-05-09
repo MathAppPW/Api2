@@ -16,7 +16,7 @@ public class RankingController : ControllerBase
         _rankingService = rankingService;
     }
 
-    [Route("getGlobal")]
+    [HttpGet("getGlobal")]
     public async Task<IActionResult> GetGlobal()
     {
         var globalRanking = await _rankingService.GetGlobalRankingAsync(10);
@@ -24,7 +24,7 @@ public class RankingController : ControllerBase
     }
 
     [Authorize]
-    [Route("getFriend")]
+    [HttpGet("getFriend")]
     public async Task<IActionResult> GetFriend()
     {
         var userId = User.FindFirst("sub")?.Value;
