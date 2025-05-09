@@ -108,19 +108,11 @@ public class SearchController : ControllerBase
         var friendship = await _friendshipRepo.FindOneAsync(fr =>
             fr.UserId1 == myUserId && fr.UserId2 == friendUser.Id || fr.UserId1 == friendUser.Id && fr.UserId2 == myUserId);
 
-        var isFriend = false;
-        if(friendship != null)
-        {
-            isFriend = true;
-        }
+        bool isFriend = friendship != null;
 
         var request = await _friendRequestRepo.FindOneAsync(request => request.ReceiverUserId == searchedUser.Id && request.SenderUserId == myUserId);
 
-        var friendRequestSent = false;
-        if (request != null)
-        {
-            friendRequestSent = true;
-        }
+        bool friendRequestSent = request != null;
 
         return Ok(new ProfileSearchResponse
         {

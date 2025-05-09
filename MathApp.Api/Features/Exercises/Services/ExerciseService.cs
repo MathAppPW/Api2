@@ -47,7 +47,7 @@ public class ExerciseService : IExerciseService
         }
 
         await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
-        var subject = chapter.Subjects.First(e => e.Name == dto.SubjectName);
+        var subject = chapter.Subjects.FirstOrDefault(e => e.Name == dto.SubjectName);
         if (subject == null)
         {
             _logger.LogWarning("Subject not found during exercises fetch attempt.");
@@ -55,7 +55,7 @@ public class ExerciseService : IExerciseService
         }
 
         await _subjectRepo.LoadCollectionAsync(subject, e => e.Lessons);
-        var lesson = subject.Lessons.First(e => e.Id == dto.LessonId);
+        var lesson = subject.Lessons.FirstOrDefault(e => e.Id == dto.LessonId);
         if (lesson == null)
         {
             _logger.LogWarning("Lesson not found during exercises fetch attempt.");
@@ -78,7 +78,7 @@ public class ExerciseService : IExerciseService
         }
 
         await _chapterRepo.LoadCollectionAsync(chapter, e => e.Subjects);
-        var subject = chapter.Subjects.First(e => e.Name == dto.SubjectName);
+        var subject = chapter.Subjects.FirstOrDefault(e => e.Name == dto.SubjectName);
         if (subject == null)
         {
             _logger.LogWarning("Subject not found during theory fetch attempt.");
