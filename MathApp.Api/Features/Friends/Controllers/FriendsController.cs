@@ -49,7 +49,8 @@ public class FriendsController : ControllerBase
             return BadRequest();
 
         var isDuplicate = await _friendshipRepo.AnyAsync(f =>
-            f.UserId1 == senderId && f.UserId2 == receiver.Id || f.UserId2 == senderId && f.UserId1 == receiver.Id);
+            f.UserId1 == senderId && f.UserId2 == receiver.Id || f.UserId2 == senderId && f.UserId1 == receiver.Id)
+            || await _friendRequestRepo.AnyAsync(f => f.ReceiverUserId == receiver.Id || f.SenderUserId == senderId);
         if (isDuplicate)
             return BadRequest("Friendship already exists");
 
@@ -121,8 +122,7 @@ public class FriendsController : ControllerBase
                 return NotFound();
             await _achievementsService.UpdateAchievements(userProfile);
         }
-        else
-            await _friendRequestRepo.RemoveAsync(request);
+        await _friendRequestRepo.RemoveAsync(request);
 
         return Ok();
     }
