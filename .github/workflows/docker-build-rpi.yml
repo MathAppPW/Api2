@@ -29,4 +29,4 @@ jobs:
           context: .
           file: ./Dockerfile.rpi
           push: true
-          tags: ghcr.io/mathapppw/mathapppw-api2-postgres:latest
+          tags: ghcr.io/mathapppw/mathapppw-api2-rpi:latest
