@@ -5,19 +5,19 @@ COPY . .
 RUN dotnet restore "MathApp.Api/MathApp.Api.csproj"
 
 WORKDIR "/src/MathApp.Api"
-RUN dotnet publish "MathApp.Api.csproj" -o /app/publish
+RUN dotnet publish "MathApp.Api.csproj" -o /app/publish --configuration Release
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
 ENV DB_ENVIRONMENT=postgresql
 
 RUN mkdir -p /app/certs
 COPY certs/us-east-1-bundle.pem /app/certs/us-east-1-bundle.pem
 
-ENV CONNECTION_STRING=Server=kosmiczna-matma.postgres.database.azure.com;Database=postgres;Port=5432;User\ Id=kosmiczna_matma;Password=MathAppPw123!
+ENV CONNECTION_STRING=Server=localhost;Database=postgres;Port=5432;User\ Id=postgres;Password=postgres
 
 COPY --from=build /app/publish .
 
