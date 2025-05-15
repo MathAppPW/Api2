@@ -3,6 +3,8 @@ namespace MathAppApi.Features.Rankings.Dtos;
 public class Ranking
 {
     public List<RankingEntry> RankingEntries { get; set; } = new();
+    public DateTime FinishDate { get; set; }
+    public int YourPosition { get; set; }
 }
 
-public record RankingEntry(string Username, int AvatarId, int Score);
+public record RankingEntry(string Username, int ProfileSkin, int Score);

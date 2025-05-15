@@ -19,7 +19,13 @@ public class RankingController : ControllerBase
     [HttpGet("getGlobal")]
     public async Task<IActionResult> GetGlobal()
     {
-        var globalRanking = await _rankingService.GetGlobalRankingAsync(10);
+        var userId = User.FindFirst("sub")?.Value;
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+        
+        var globalRanking = await _rankingService.GetGlobalRankingAsync(10, userId);
         return Ok(globalRanking);
     }
 
