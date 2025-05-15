@@ -16,22 +16,25 @@ public class RankingController : ControllerBase
         _rankingService = rankingService;
     }
 
-    [HttpGet("getGlobal")]
-    public async Task<IActionResult> GetGlobal()
+    [HttpGet("getGlobal/{count}")]
+    public async Task<IActionResult> GetGlobal([FromRoute] int count)
     {
+        if (count < 1)
+            return BadRequest();
+        
         var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
         {
             return Unauthorized();
         }
         
-        var globalRanking = await _rankingService.GetGlobalRankingAsync(10, userId);
+        var globalRanking = await _rankingService.GetGlobalRankingAsync(count, userId);
         return Ok(globalRanking);
     }
 
     [Authorize]
-    [HttpGet("getFriend")]
-    public async Task<IActionResult> GetFriend()
+    [HttpGet("getFriend/{count}")]
+    public async Task<IActionResult> GetFriend([FromRoute] int count)
     {
         var userId = User.FindFirst("sub")?.Value;
         if (userId == null)
@@ -39,7 +42,7 @@ public class RankingController : ControllerBase
             return Unauthorized();
         }
 
-        var friendRanking = await _rankingService.GetFriendsRankingAsync(userId, 10);
+        var friendRanking = await _rankingService.GetFriendsRankingAsync(userId, count);
         return Ok(friendRanking);
     }
 }
