@@ -58,7 +58,7 @@ public class HistoryControllerTests
 
         var dto = new HistoryEntryDto
         {
-            SeriesId = "series1",
+            SeriesId = 1,
             Date = DateTime.UtcNow,
             TimeSpent = 60,
             SuccessfulCount = 6,
@@ -77,7 +77,7 @@ public class HistoryControllerTests
 
         var dto = new HistoryEntryDto
         {
-            SeriesId = "series1",
+            SeriesId = 1,
             Date = DateTime.UtcNow,
             TimeSpent = 60,
             SuccessfulCount = 6,
@@ -96,7 +96,7 @@ public class HistoryControllerTests
 
         var dto = new HistoryEntryDto
         {
-            SeriesId = "series1",
+            SeriesId = 1,
             Date = DateTime.UtcNow,
             TimeSpent = 60,
             SuccessfulCount = 6,

@@ -91,7 +91,7 @@ public class StreakControllerTests
         {
             HistoryEntryDto entry = new HistoryEntryDto
             {
-                SeriesId = "series1",
+                SeriesId = 1,
                 Date = DateTime.Today.AddDays(-days[i]),
                 TimeSpent = 60,
                 SuccessfulCount = 1,
@@ -106,7 +106,7 @@ public class StreakControllerTests
         {
             HistoryEntryDto entry = new HistoryEntryDto
             {
-                SeriesId = "series1",
+                SeriesId = 1,
                 Date = DateTime.Today.AddDays(-failedDays[i]),
                 TimeSpent = 10,
                 SuccessfulCount = 0,
@@ -180,7 +180,7 @@ public class StreakControllerTests
         {
             HistoryEntryDto entry = new HistoryEntryDto
             {
-                SeriesId = "series1",
+                SeriesId = 1,
                 Date = DateTime.Today.AddDays(-days[i]),
                 TimeSpent = 10,
                 SuccessfulCount = 1,
@@ -195,7 +195,7 @@ public class StreakControllerTests
         {
             HistoryEntryDto entry = new HistoryEntryDto
             {
-                SeriesId = "series1",
+                SeriesId = 1,
                 Date = DateTime.Today.AddDays(-days[i]),
                 TimeSpent = 10,
                 SuccessfulCount = 0,
