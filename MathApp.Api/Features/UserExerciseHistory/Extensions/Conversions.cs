@@ -12,10 +12,11 @@ public static class Conversions
         return new UserHistoryEntry
         {
             Id = Guid.NewGuid().ToString(),
-            ExerciseId = historyEntry.ExerciseId,
+            SeriesId = historyEntry.SeriesId,
             Date = historyEntry.Date,
             TimeSpent = historyEntry.TimeSpent,
-            Success = historyEntry.Success
+            SuccessfulCount = historyEntry.SuccessfulCount,
+            FailedCount = historyEntry.FailedCount,
         };
     }
 }

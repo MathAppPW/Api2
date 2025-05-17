@@ -12,13 +12,13 @@ public class UserHistoryEntry
     [Required]
     public string Id { get; set; } = "";
     [Required]
-    public string ExerciseId { get; set; } = "";
-    [Required]
     public int SeriesId { get; set; }
     [Required]
     public DateTime Date { get; set; } = DateTime.UtcNow;
     [Required]
     public int TimeSpent { get; set; } = 0;
     [Required]
-    public bool Success { get; set; } = false;
+    public int SuccessfulCount { get; set; }
+    [Required]
+    public int FailedCount { get; set; }
 }
