@@ -103,8 +103,7 @@ public class ProgressService : IProgressService
                     await _seriesRepo.LoadCollectionAsync(series, e => e.Exercises);
                 }
 
-                var completed = lesson.Series.Count(series =>
-                    series.Exercises.All(e => history.Any(h => h.ExerciseId == e.Id.ToString() && h.SeriesId == series.Id && h.Success))
+                var completed = lesson.Series.Count(series => history.Any(h => h.SeriesId == series.Id)
                 );
 
                 if (lesson.Series.Count > 0)

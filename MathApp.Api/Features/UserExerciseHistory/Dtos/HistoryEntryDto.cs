@@ -5,11 +5,13 @@ namespace MathAppApi.Features.UserExerciseHistory.Dtos;
 public class HistoryEntryDto
 {
     [Required]
-    public string ExerciseId { get; set; } = "";
+    public int SeriesId { get; set; }
     [Required]
     public DateTime Date { get; set; }
     [Required]
     public int TimeSpent { get; set; }
     [Required]
-    public bool Success { get; set; }
+    public int SuccessfulCount { get; set; }
+    [Required]
+    public int FailedCount { get; set; }
 }

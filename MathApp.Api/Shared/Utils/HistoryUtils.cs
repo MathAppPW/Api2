@@ -167,7 +167,7 @@ public class HistoryUtils : IHistoryUtils
         }
 
         List<DateTime> successDays = history
-            .Where(e => e.Success)
+            .Where(e => e.SuccessfulCount > 0)
             .Select(e => e.Date.Date)
             .Distinct()
             .OrderBy(date => date)
@@ -196,8 +196,8 @@ public class HistoryUtils : IHistoryUtils
                 Date = g.Key,
                 SecondsSpent = g.Sum(e => e.TimeSpent),
                 ExercisesCount = g.Count(),
-                ExercisesCountSuccessful = g.Count(e => e.Success),
-                ExercisesCountFailed = g.Count(e => !e.Success),
+                ExercisesCountSuccessful = g.Sum(e => e.SuccessfulCount),
+                ExercisesCountFailed = g.Sum(e => e.SuccessfulCount),
             })
             .OrderBy(d => d.Date)
             .ToList();
@@ -211,7 +211,7 @@ public class HistoryUtils : IHistoryUtils
             return 0;
         }
 
-        return history.Count(e => e.Success);
+        return history.Sum(e => e.SuccessfulCount);
     }
 
     public async Task<List<UserHistoryEntry>> GetList(UserProfile userProfile)

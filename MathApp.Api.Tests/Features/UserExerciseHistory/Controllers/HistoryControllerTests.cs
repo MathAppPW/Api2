@@ -58,10 +58,11 @@ public class HistoryControllerTests
 
         var dto = new HistoryEntryDto
         {
-            ExerciseId = "exercise1",
+            SeriesId = 1,
             Date = DateTime.UtcNow,
             TimeSpent = 60,
-            Success = true
+            SuccessfulCount = 6,
+            FailedCount = 2
         };
 
         var result = await _controller.Add(dto);
@@ -76,10 +77,11 @@ public class HistoryControllerTests
 
         var dto = new HistoryEntryDto
         {
-            ExerciseId = "exercise1",
+            SeriesId = 1,
             Date = DateTime.UtcNow,
             TimeSpent = 60,
-            Success = true
+            SuccessfulCount = 6,
+            FailedCount = 2
         };
 
         var result = await _controller.Add(dto);
@@ -94,10 +96,11 @@ public class HistoryControllerTests
 
         var dto = new HistoryEntryDto
         {
-            ExerciseId = "exercise1",
+            SeriesId = 1,
             Date = DateTime.UtcNow,
             TimeSpent = 60,
-            Success = true
+            SuccessfulCount = 6,
+            FailedCount = 2
         };
 
         var result = await _controller.Add(dto);
