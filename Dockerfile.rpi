@@ -17,7 +17,7 @@ ENV DB_ENVIRONMENT=postgresql
 RUN mkdir -p /app/certs
 COPY certs/us-east-1-bundle.pem /app/certs/us-east-1-bundle.pem
 
-ENV CONNECTION_STRING=Server=10.40.109.45;Database=postgres;Port=5432;User\ Id=postgres;Password=postgres
+ENV CONNECTION_STRING=Server=10.40.109.48;Database=postgres;Port=5432;User\ Id=postgres;Password=postgres
 
 COPY --from=build /app/publish .
 
