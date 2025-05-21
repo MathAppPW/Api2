@@ -195,9 +195,9 @@ public class HistoryUtils : IHistoryUtils
             {
                 Date = g.Key,
                 SecondsSpent = g.Sum(e => e.TimeSpent),
-                ExercisesCount = g.Count(),
+                ExercisesCount = g.Sum(e => e.SuccessfulCount + e.FailedCount),
                 ExercisesCountSuccessful = g.Sum(e => e.SuccessfulCount),
-                ExercisesCountFailed = g.Sum(e => e.SuccessfulCount),
+                ExercisesCountFailed = g.Sum(e => e.FailedCount),
             })
             .OrderBy(d => d.Date)
             .ToList();

@@ -1,6 +1,7 @@
 ﻿using MathApp.Dal.Interfaces;
 using MathAppApi.Features.Authentication.Dtos;
 using MathAppApi.Features.UserProfile.Dtos;
+using MathAppApi.Features.UserProfile.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +16,13 @@ public class AchievementsController : ControllerBase
 
     private readonly ILogger<AchievementsController> _logger;
 
-    public AchievementsController(IUserProfileRepo userProfileRepo, ILogger<AchievementsController> logger)
+    private readonly IAchievementsService _achievementsService;
+
+    public AchievementsController(IUserProfileRepo userProfileRepo, ILogger<AchievementsController> logger, IAchievementsService achievementsService)
     {
         _userProfileRepo = userProfileRepo;
         _logger = logger;
+        _achievementsService = achievementsService;
     }
 
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -40,6 +44,8 @@ public class AchievementsController : ControllerBase
             _logger.LogInformation("User not found during rocket skin achievements fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
+
+        await _achievementsService.UpdateAchievements(userProfile);
 
         return Ok(new AchievementsResponse
         {
@@ -66,6 +72,8 @@ public class AchievementsController : ControllerBase
             _logger.LogInformation("User not found during avatar achievements fetch attempt.");
             return BadRequest(new MessageResponse("User not found"));
         }
+
+        await _achievementsService.UpdateAchievements(userProfile);
 
         return Ok(new AchievementsResponse
         {
