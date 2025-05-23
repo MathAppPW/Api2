@@ -23,6 +23,7 @@ public class RankingService : IRankingService
                   SELECT 
                       u."Username", 
                       up."ProfileSkin", 
+                      up."Level",
                       COUNT(*)        AS "Score"
                   FROM "Users" u
                   JOIN "UserProfiles" up
@@ -31,7 +32,7 @@ public class RankingService : IRankingService
                   JOIN "UserHistoryEntries" uhe
                     ON uhe."Id" = his."Id"
                   WHERE uhe."Date" >= {0}
-                  GROUP BY u."Username", up."ProfileSkin"
+                  GROUP BY u."Username", up."ProfileSkin", up."Level"
                   ORDER BY "Score" DESC
                   LIMIT {1};
                   """;
@@ -65,13 +66,13 @@ public class RankingService : IRankingService
                     SELECT {0}
                     )
                   SELECT
-                    u."Username", up."ProfileSkin", COUNT(uhe."Id") AS "Score"
+                    u."Username", up."ProfileSkin", up."Level", COUNT(uhe."Id") AS "Score"
                   FROM friends as fr
                   JOIN "Users" u ON u."Id" = fr."Id"
                   JOIN "UserProfiles" up ON up."Id" = u."Id"
                   LEFT JOIN LATERAL UNNEST(up."History") AS his("Id") ON true
                   LEFT JOIN "UserHistoryEntries" uhe ON uhe."Id" = his."Id" AND uhe."Date" >= {2}
-                  GROUP BY u."Username", up."ProfileSkin"
+                  GROUP BY u."Username", up."ProfileSkin", up."Level"
                   ORDER BY "Score" DESC
                   LIMIT {1}
                   """;

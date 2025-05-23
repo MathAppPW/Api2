@@ -7,4 +7,4 @@ public class Ranking
     public int YourPosition { get; set; }
 }
 
-public record RankingEntry(string Username, int ProfileSkin, int Score);
+public record RankingEntry(string Username, int ProfileSkin, int Level, int Score);
