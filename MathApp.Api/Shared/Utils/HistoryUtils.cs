@@ -94,7 +94,7 @@ public class HistoryUtils : IHistoryUtils
         for (int i = successDays.Count - 1; i >= 0; i--)
         {
             bool isRecentDay = successDays[i] == today || successDays[i] == yesterday;
-            bool doesContinueStreak = !isRecentDay && (successDays[i + 1] - successDays[i]).Days == 1;
+            bool doesContinueStreak = !isRecentDay && i < successDays.Count - 1 && (successDays[i + 1] - successDays[i]).Days == 1;
             if (isRecentDay || currentStreak > 0 && doesContinueStreak)
             {
                 currentStreak++;
