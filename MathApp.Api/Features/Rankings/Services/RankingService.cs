@@ -45,7 +45,8 @@ public class RankingService : IRankingService
         {
             RankingEntries = rankingEntries,
             FinishDate = GetRankingFinish(),
-            YourPosition = await GetUsersPositionGlobal(userId)
+            YourPosition = await GetUsersPositionGlobal(userId),
+            YourScore = await GetUserScore(userId)
         };
     }
 
@@ -85,7 +86,8 @@ public class RankingService : IRankingService
         {
             RankingEntries = rankingEntries,
             FinishDate = GetRankingFinish(),
-            YourPosition = await GetUsersPositionLocal(userId)
+            YourPosition = await GetUsersPositionLocal(userId),
+            YourScore = await GetUserScore(userId)
         };
     }
 
@@ -149,5 +151,20 @@ public class RankingService : IRankingService
                   """;
         var position = await _db.Database.SqlQueryRaw<int>(sql, userId, monthStart).FirstOrDefaultAsync();
         return position == 0 ? _db.Friendships.Count(f => f.UserId1 == userId || f.UserId2 == userId) : position;
+    }
+
+    private async Task<int> GetUserScore(string userId)
+    {
+        var today = DateTime.UtcNow;
+        var monthStart = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var userProfile = await _db.FindAsync<Models.UserProfile>(userId);
+        if (userProfile == null)
+        {
+            return 0;
+        }
+
+        var result =
+            await _db.UserHistoryEntries.CountAsync(uh => userProfile.History.Contains(uh.Id) && uh.Date > monthStart);
+        return result;
     }
 }
